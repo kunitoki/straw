@@ -1,5 +1,5 @@
 # straw
-Squeeze is a juce automation framework for integration testing
+Straw is a juce automation framework for integration testing.
 
 ## Example of REST API
 
