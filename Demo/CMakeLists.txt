@@ -22,9 +22,29 @@ set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD 17)
 
 if(APPLE)
     set_target_properties(${TARGET_NAME} PROPERTIES OSX_ARCHITECTURES "arm64;x86_64")
+    set(STRAW_LTO "juce::juce_recommended_lto_flags")
+else()
+    set(STRAW_LTO "")
 endif()
 
-set(SQUEEZE_LTO "juce::juce_recommended_lto_flags")
+add_library(juce_straw_recommended_warning_flags INTERFACE)
+if((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC"))
+    #target_compile_options(juce_straw_recommended_warning_flags INTERFACE "/W4")
+elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+    target_compile_options(juce_straw_recommended_warning_flags INTERFACE
+        -Wno-shadow-field-in-constructor
+        -Wno-shadow-field
+        -Wno-shadow-uncaptured-local
+        -Wno-self-assign-overloaded
+        -Wno-float-equal)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(juce_straw_recommended_warning_flags INTERFACE
+        -Wno-shadow-field-in-constructor
+        -Wno-shadow-field
+        -Wno-shadow-uncaptured-local
+        -Wno-self-assign-overloaded
+        -Wno-float-equal)
+endif()
 
 set(Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
 set(Python_USE_STATIC_LIBS TRUE)
@@ -60,6 +80,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
+    juce_straw_recommended_warning_flags
     juce_straw
     Python::Python
-    ${SQUEEZE_LTO})
+    ${STRAW_LTO})
