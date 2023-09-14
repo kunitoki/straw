@@ -276,8 +276,10 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
 
     py::class_<Point<int>> (m, "PointInt")
         .def (py::init<>())
+        /*
         .def (py::init<const Point<int>&>())
         .def (py::init<int, int>())
+        */
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isOrigin", &Point<int>::isOrigin)
@@ -326,8 +328,10 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
 
     py::class_<Point<float>> (m, "PointFloat")
         .def (py::init<>())
+        /*
         .def (py::init<const Point<float>&>())
         .def (py::init<float, float>())
+        */
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isOrigin", &Point<float>::isOrigin)
@@ -418,7 +422,7 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
 
     py::class_<PixelARGB> (m, "PixelARGB")
         .def (py::init<>())
-        .def (py::init<uint8, uint8, uint8, uint8>())
+        //.def (py::init<uint8, uint8, uint8, uint8>())
         .def ("getNativeARGB", &PixelARGB::getNativeARGB)
         .def ("getInARGBMaskOrder", &PixelARGB::getInARGBMaskOrder)
         .def ("getInARGBMemoryOrder", &PixelARGB::getInARGBMemoryOrder)
@@ -491,6 +495,7 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
 
     py::class_<Colour> (m, "Colour")
         .def (py::init<>())
+        /*
         .def (py::init<uint32>())
         .def (py::init<uint8, uint8, uint8>())
         .def (py::init<uint8, uint8, uint8, uint8>())
@@ -500,6 +505,7 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
         .def (py::init<PixelARGB>())
         .def (py::init<PixelRGB>())
         .def (py::init<PixelAlpha>())
+        */
         .def_static ("fromRGB", &Colour::fromRGB)
         .def_static ("fromRGBA", &Colour::fromRGBA)
         .def_static ("fromFloatRGBA", &Colour::fromFloatRGBA)
@@ -554,8 +560,10 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
 
     imageClass
         .def (py::init<>())
+        /*
         .def (py::init<Image::PixelFormat, int, int, bool>())
         .def (py::init<const Image&>())
+        */
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isValid", &Image::isValid)
@@ -669,26 +677,6 @@ PYBIND11_EMBEDDED_MODULE(juce, m)
         .def ("typeName", [](const juce::Component* self)
         {
             return Helpers::demangleClassName (typeid(*self).name());
-        })
-
-        .def ("invokeCustomMethod", [](Component* self, py::args args) -> juce::var
-        {
-            if (args.size() == 0)
-                throw ScriptException ("Missing argument method to invoke");
-
-            auto method = self->getProperties().getVarPointer (String (py::str (args [0])));
-            if (method == nullptr)
-                throw ScriptException ("Method to invoke not found in object");
-
-            if (! method->isMethod())
-                throw ScriptException ("Method to invoke is not a method but something else");
-
-            Array<var> varArgs;
-            for (std::size_t i = 1; i < args.size(); ++i)
-                varArgs.add (args [i].cast<var>());
-
-            var::NativeFunctionArgs funcArgs (var(), varArgs.data(), varArgs.size());
-            return method->getNativeFunction() (funcArgs);
         })
     ;
 

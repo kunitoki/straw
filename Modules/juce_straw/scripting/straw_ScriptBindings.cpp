@@ -93,6 +93,31 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return Image();
     });
 
+    m.def ("invokeComponentCustomMethod", [](py::args args) -> juce::var
+    {
+        if (args.size() < 2)
+            throw ScriptException ("Missing arguments componentID and/or methodName when calling invokeComponentCustomMethod");
+
+        if (auto component = Helpers::findComponentById (String (py::str (args [0]))))
+        {
+            auto method = component->getProperties().getVarPointer (String (py::str (args [1])));
+            if (method == nullptr)
+                throw ScriptException ("Method to invoke not found in object");
+
+            if (! method->isMethod())
+                throw ScriptException ("Method to invoke is not a method but something else");
+
+            Array<var> varArgs;
+            for (std::size_t i = 2; i < args.size(); ++i)
+                varArgs.add (args [i].cast<var>());
+
+            var::NativeFunctionArgs funcArgs (var(), varArgs.data(), varArgs.size());
+            return method->getNativeFunction() (funcArgs);
+        }
+
+        return juce::var();
+    });
+    
     m.def("assertTrue", [](py::args args)
     {
         if (args.size() != 1)
