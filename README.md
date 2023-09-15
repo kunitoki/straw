@@ -1,3 +1,5 @@
+![Straw Banner](https://github.com/kunitoki/straw/blob/main/banner.png?raw=true)
+
 # straw
 Straw is a juce automation framework for integration testing.
 
