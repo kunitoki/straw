@@ -48,14 +48,14 @@ juce::String makeHttpStatusCode (int statusCode)
 juce::MemoryBlock makeHttpResponse (const juce::String& payload, const juce::String& contentType, int status = 200)
 {
     juce::String response;
-    
+
     response
     << "HTTP/1.1 " << makeHttpStatusCode (status) << "\n"
     << "Server: Squeeze/0.0.1" << "\n"
     << "Content-Type: " << contentType << "\n"
     << "Content-Length: " << payload.getNumBytesAsUTF8() << "\n"
     << "Connection: Closed" << "\n\n";
-    
+
     juce::MemoryBlock mb;
     mb.append (response.toRawUTF8(), response.getNumBytesAsUTF8());
     mb.append (payload.toRawUTF8(), payload.getNumBytesAsUTF8());
@@ -65,14 +65,14 @@ juce::MemoryBlock makeHttpResponse (const juce::String& payload, const juce::Str
 juce::MemoryBlock makeHttpResponse (const juce::MemoryBlock& payload, const juce::String& contentType, int status = 200)
 {
     juce::String response;
-    
+
     response
     << "HTTP/1.1 " << makeHttpStatusCode (status) << "\n"
     << "Server: Squeeze/0.0.1" << "\n"
     << "Content-Type: " << contentType << "\n"
     << "Content-Length: " << payload.getSize() << "\n"
     << "Connection: Closed" << "\n\n";
-    
+
     juce::MemoryBlock mb;
     mb.append (response.toRawUTF8(), response.getNumBytesAsUTF8());
     mb.append (payload.getData(), payload.getSize());
@@ -172,7 +172,7 @@ void sendHttpResponse (const juce::Image& image, int status, juce::StreamingSock
 {
     juce::MemoryBlock mb;
     juce::MemoryOutputStream mos (mb, false);
-       
+
     juce::PNGImageFormat pngFormat;
     if (pngFormat.writeImageToStream(image, mos))
         sendHttpResponse (mb, "image/png", status, connection);
@@ -206,7 +206,7 @@ AutomationServer::~AutomationServer()
 {
     Bindings::clearComponentTypes();
 
-    stopThread (10000);
+    stop();
 }
 
 //=================================================================================================
@@ -240,8 +240,10 @@ void AutomationServer::stop()
     connectionPool.removeAllJobs (true, 10000);
 
     socket.close();
-    
+
     getLocalRunFile().deleteFile();
+
+    stopThread (10000);
 }
 
 //=================================================================================================
@@ -295,7 +297,7 @@ void AutomationServer::handleConnection (std::shared_ptr<juce::StreamingSocket> 
 
     if (request.contentType == "application/json")
         handleApplicationJsonRequest (std::move (request));
-    
+
     if (request.contentType == "text/x-python")
         handlePythonScriptRequest (std::move (request));
 }
@@ -347,7 +349,7 @@ void AutomationServer::handlePythonScriptRequest (Request request)
         }());
 
         auto result = engine.runScript (request.contentData);
-        
+
         connectionPool.addJob ([result = std::move (result), request = std::move (request)]
         {
             if (result.failed())
@@ -399,7 +401,7 @@ void AutomationServer::registerDefaultComponents()
     Bindings::registerComponentType ("juce::ShapeButton", &ComponentType<juce::ShapeButton>);
     Bindings::registerComponentType ("juce::TextButton", &ComponentType<juce::TextButton>);
     Bindings::registerComponentType ("juce::ToggleButton", &ComponentType<juce::ToggleButton>);
-    
+
     // Widgets
     Bindings::registerComponentType ("juce::Slider", &ComponentType<juce::Slider>);
 }

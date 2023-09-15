@@ -53,7 +53,11 @@ private:
             centreWithSize (getWidth(), getHeight());
            #endif
 
-            setVisible (true);
+            juce::MessageManager::callAsync([this]
+            {
+                setVisible (true);
+                toFront (true);
+            });
         }
 
         void closeButtonPressed() override

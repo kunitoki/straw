@@ -14,9 +14,9 @@ juce::String CustomSlider::customMethod() const
 PYBIND11_EMBEDDED_MODULE(custom, m)
 {
     namespace py = pybind11;
-    
+
     py::module_::import ("juce");
-    
+
     py::class_<CustomSlider, juce::Slider> (m, "CustomSlider")
         .def ("customMethod", &CustomSlider::customMethod);
 }
@@ -41,25 +41,32 @@ AutomationDemo::AutomationDemo()
     setSize (300, 600);
 
     automationServer.registerDefaultEndpoints();
-    automationServer.registerEndpoint ("/change_background_colour", [this](straw::Request request)
+    
+    auto weakThis = juce::Component::SafePointer<AutomationDemo>(this);
+    automationServer.registerEndpoint ("/change_background_colour", [weakThis](straw::Request request)
     {
         auto colour = juce::Colour::fromString (request.data.getProperty ("colour", "FF00FF00").toString());
 
-        juce::MessageManager::callAsync ([this, colour, connection = std::move (request.connection)]
+        juce::MessageManager::callAsync ([weakThis, colour, connection = std::move (request.connection)]
         {
-            setColour (juce::DocumentWindow::backgroundColourId, colour);
-
-            repaint();
-
-            juce::var response = straw::makeResultVar (true);
-            straw::sendHttpResponse (response, 200, *connection);
+            if (auto self = weakThis.getComponent())
+            {
+                self->setColour (juce::DocumentWindow::backgroundColourId, colour);
+                self->repaint();
+                
+                straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
+            }
+            else
+            {
+                straw::sendHttpErrorMessage("Unable to find the component!", 404, *connection);
+            }
         });
     });
 
     automationServer.registerDefaultComponents();
     automationServer.registerComponentType ("CustomSlider", &straw::ComponentType<CustomSlider>);
     automationServer.registerCustomPythonModules ({ "custom" });
-    
+
     auto result = automationServer.start (8001);
     if (result.failed())
         juce::Logger::writeToLog (result.getErrorMessage());

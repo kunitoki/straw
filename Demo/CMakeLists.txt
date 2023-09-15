@@ -12,6 +12,10 @@ add_subdirectory(${JUCE_PATH} ./JUCE)
 get_filename_component(MODULES_PATH "${CMAKE_CURRENT_LIST_DIR}/../Modules" ABSOLUTE)
 add_subdirectory(${MODULES_PATH} ./Modules)
 
+set(Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
+set(Python_USE_STATIC_LIBS TRUE)
+find_package(Python REQUIRED Development.Embed)
+
 juce_add_gui_app(${TARGET_NAME} PRODUCT_NAME "Automation Example")
 juce_generate_juce_header(${TARGET_NAME})
 
@@ -26,29 +30,6 @@ if(APPLE)
 else()
     set(STRAW_LTO "")
 endif()
-
-add_library(juce_straw_recommended_warning_flags INTERFACE)
-if((CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR (CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC"))
-    #target_compile_options(juce_straw_recommended_warning_flags INTERFACE "/W4")
-elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-    target_compile_options(juce_straw_recommended_warning_flags INTERFACE
-        -Wno-shadow-field-in-constructor
-        -Wno-shadow-field
-        -Wno-shadow-uncaptured-local
-        -Wno-self-assign-overloaded
-        -Wno-float-equal)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(juce_straw_recommended_warning_flags INTERFACE
-        -Wno-shadow-field-in-constructor
-        -Wno-shadow-field
-        -Wno-shadow-uncaptured-local
-        -Wno-self-assign-overloaded
-        -Wno-float-equal)
-endif()
-
-set(Python_ROOT_DIR "/Library/Frameworks/Python.framework/Versions/Current")
-set(Python_USE_STATIC_LIBS TRUE)
-find_package(Python REQUIRED Development.Embed)
 
 target_compile_definitions(${TARGET_NAME} PRIVATE
     JUCE_STANDALONE_APPLICATION=1
@@ -80,7 +61,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
-    juce_straw_recommended_warning_flags
-    juce_straw
+    straw::juce_straw_recommended_warning_flags
+    straw::juce_straw
     Python::Python
     ${STRAW_LTO})
