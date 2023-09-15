@@ -7,7 +7,7 @@ Straw is a juce automation framework for integration testing.
 
 ### Download and install the python framework
 
-Go to
+Go to https://www.python.org/downloads/ and download a python install. The version *3.11 is reccommended*. After installing it, make sure you write down the location of the install. For example on macOS, typically it is installed in `/Library/Frameworks/Python.framework/Versions/3.11` but you could use the `/Library/Frameworks/Python.framework/Versions/Current` symbolic link for simplicity.
 
 ### Setup the dependency using cmake
 
