@@ -92,7 +92,7 @@ automationServer = std::make_unique<straw::AutomationServer>();
 auto weakMainComponent = juce::Component::SafePointer<MainComponent>(mainComponent.get());
 automationServer.registerEndpoint ("/change_background_colour", [weakMainComponent](straw::Request request)
 {
-    // PArse the data from the request
+    // Parse the data from the request
     auto colour = juce::Colour::fromString (request.data.getProperty ("colour", "FF00FF00").toString());
 
     juce::MessageManager::callAsync ([weakMainComponent, colour, connection = std::move (request.connection)]
@@ -102,12 +102,12 @@ automationServer.registerEndpoint ("/change_background_colour", [weakMainCompone
             mainComponent->setColour (juce::DocumentWindow::backgroundColourId, colour);
             mainComponent->repaint();
 
-            // Return a 200 OK HTTP response with a { "result": true } response JSON
+            // Return a 200 OK HTTP response with a JSON payload of { "result": true }
             straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
         }
         else
         {
-            // Return a 404 Not Found HTTP response with a { "error": "Unable to find the component!" } response JSON
+            // Return a 404 Not Found HTTP response with a JSON payload of { "error": "..." }
             straw::sendHttpErrorMessage("Unable to find the component!", 404, *connection);
         }
     });
