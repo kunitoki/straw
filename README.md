@@ -82,42 +82,39 @@ curl -X GET http://localhost:8001/straw/component/exists -H 'Content-Type: appli
 It is possible to register custom endpoints:
 
 ```cpp
+// Initialise your windows and components here...
+mainComponent = std::make_unique<MainComponent>();
 
-    void initialise (const String&) override
+// Create the animation server instance
+automationServer = std::make_unique<straw::AutomationServer>();
+
+// Register a custom endpoint
+auto weakMainComponent = juce::Component::SafePointer<MainComponent>(mainComponent.get());
+automationServer.registerEndpoint ("/change_background_colour", [weakMainComponent](straw::Request request)
+{
+    // PArse the data from the request
+    auto colour = juce::Colour::fromString (request.data.getProperty ("colour", "FF00FF00").toString());
+
+    juce::MessageManager::callAsync ([weakMainComponent, colour, connection = std::move (request.connection)]
     {
-        // Initialise your windows and components here...
-        mainComponent = std::make_unique<MainComponent>();
-
-        // Create the animation server instance
-        automationServer = std::make_unique<straw::AutomationServer>();
-
-        // Register a custom endpoint
-        auto weakMainComponent = juce::Component::SafePointer<MainComponent>(mainComponent.get());
-        automationServer.registerEndpoint ("/change_background_colour", [weakMainComponent](straw::Request request)
+        if (auto mainComponent = weakMainComponent.getComponent())
         {
-            // PArse the data from the request
-            auto colour = juce::Colour::fromString (request.data.getProperty ("colour", "FF00FF00").toString());
+            mainComponent->setColour (juce::DocumentWindow::backgroundColourId, colour);
+            mainComponent->repaint();
 
-            juce::MessageManager::callAsync ([weakMainComponent, colour, connection = std::move (request.connection)]
-            {
-                if (auto mainComponent = weakMainComponent.getComponent())
-                {
-                    mainComponent->setColour (juce::DocumentWindow::backgroundColourId, colour);
-                    mainComponent->repaint();
+            // Return a 200 OK HTTP response with a { "result": true } response JSON
+            straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
+        }
+        else
+        {
+            // Return a 404 Not Found HTTP response with a { "error": "Unable to find the component!" } response JSON
+            straw::sendHttpErrorMessage("Unable to find the component!", 404, *connection);
+        }
+    });
+});
 
-                    // Return a 200 OK HTTP response with a { "result": true } response JSON
-                    straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
-                }
-                else
-                {
-                    // Return a 404 Not Found HTTP response with a { "error": "Unable to find the component!" } response JSON
-                    straw::sendHttpErrorMessage("Unable to find the component!", 404, *connection);
-                }
-            });
-        });
-
-        // Start the HTTP server
-        auto result = automationServer->start();
+// Start the HTTP server
+auto result = automationServer->start();
 ```
 
 This way your application can execute a remote JSON RPC callback:
