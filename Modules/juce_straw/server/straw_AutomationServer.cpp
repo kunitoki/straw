@@ -12,8 +12,37 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_events/juce_events.h>
 
+#if JUCE_WINDOWS
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 namespace straw {
 namespace {
+
+//=================================================================================================
+
+int32_t currentProcessPid()
+{
+#if JUCE_MAC || JUCE_LINUX
+    return static_cast<int32_t>(::getpid());
+#else
+    return static_cast<int32_t>(GetCurrentProcessId());
+#endif
+}
+
+//=================================================================================================
+
+template <class... Args>
+juce::Result failedResult (Args&&... args)
+{
+    juce::String message;
+
+    (message << ... << std::forward<Args> (args));
+
+    return juce::Result::fail (message);
+}
 
 //=================================================================================================
 
@@ -142,10 +171,6 @@ Request parseHttpPayload (const juce::String& payload)
     return request;
 }
 
-} // namespace
-
-//=================================================================================================
-
 juce::var makeResultVar(const juce::var& value)
 {
     juce::DynamicObject::Ptr object = new juce::DynamicObject;
@@ -159,6 +184,8 @@ juce::var makeErrorVar(juce::StringRef message)
     object->setProperty("error", juce::String(message));
     return object.get();
 }
+
+} // namespace
 
 //=================================================================================================
 
@@ -177,7 +204,7 @@ void sendHttpResponse (const juce::Image& image, int status, juce::StreamingSock
     if (pngFormat.writeImageToStream(image, mos))
         sendHttpResponse (mb, "image/png", status, connection);
     else
-        sendHttpErrorMessage ("Unable to send image", status, connection);
+        sendHttpErrorResponse ("Unable to send image", status, connection);
 }
 
 void sendHttpResponse (const juce::var& response, int status, juce::StreamingSocket& connection)
@@ -189,7 +216,12 @@ void sendHttpResponse (const juce::var& response, int status, juce::StreamingSoc
     connection.write (responseMessage.getData(), static_cast<int> (responseMessage.getSize()));
 }
 
-void sendHttpErrorMessage (juce::StringRef message, int status, juce::StreamingSocket& connection)
+void sendHttpResultResponse (const juce::var& result, int status, juce::StreamingSocket& connection)
+{
+    sendHttpResponse (makeResultVar (result), status, connection);
+}
+
+void sendHttpErrorResponse (juce::StringRef message, int status, juce::StreamingSocket& connection)
 {
     sendHttpResponse (makeErrorVar (message), status, connection);
 }
@@ -211,39 +243,58 @@ AutomationServer::~AutomationServer()
 
 //=================================================================================================
 
-juce::Result AutomationServer::start (int port)
+juce::Result AutomationServer::start (std::optional<int> port)
 {
     if (socket.isConnected())
-        return juce::Result::fail ("Unable to listen, server already listening");
+        return failedResult ("Unable to listen, server already listening");
 
-    localPort = -1;
+    localPort.reset();
 
-    if (! socket.createListener (port))
-        return juce::Result::fail ("Unable to listen to port");
+    int definedPort = port.value_or (8001);
+
+    if (! socket.createListener (definedPort))
+    {
+        if (port.has_value())
+            return failedResult ("Unable to listen to port ", definedPort);
+
+        int currentPort = definedPort, upperPort = juce::jmin(65535, definedPort + 1000);
+        while (! socket.createListener (currentPort) && currentPort < upperPort)
+            ++currentPort;
+        
+        if (! socket.isConnected())
+            return failedResult ("Unable to listen to ports in range ", definedPort, "-", upperPort);
+    }
 
     if (! startThread())
-        return juce::Result::fail ("Unable to start thread");
+        return failedResult ("Unable to start thread");
 
-    localPort = port;
+    localPort = definedPort;
 
-    getLocalRunFile().replaceWithText (juce::String (localPort));
+    updateLocalRunFile();
 
     return juce::Result::ok();
 }
 
 void AutomationServer::stop()
 {
-    if (! socket.isConnected() || localPort < 0)
+    if (! socket.isConnected() || ! localPort.has_value())
         return;
 
     signalThreadShouldExit();
-    connectionPool.removeAllJobs (true, 10000);
-
     socket.close();
+
+    connectionPool.removeAllJobs (true, 10000);
 
     getLocalRunFile().deleteFile();
 
-    stopThread (10000);
+    waitForThreadToExit (10000);
+}
+
+//=================================================================================================
+
+std::optional<int> AutomationServer::getPort() const
+{
+    return localPort;
 }
 
 //=================================================================================================
@@ -253,6 +304,10 @@ void AutomationServer::run()
     while (! threadShouldExit())
     {
         auto connection = socket.waitForNextConnection();
+
+        if (! socket.isConnected())
+            break;
+
         if (! connection)
             continue;
 
@@ -268,19 +323,34 @@ void AutomationServer::run()
 
 //=================================================================================================
 
+void AutomationServer::updateLocalRunFile()
+{
+    jassert (localPort.has_value());
+    
+    juce::String content;
+    
+    content
+        << "pid=" << currentProcessPid() << juce::newLine
+        << "port=" << *localPort << juce::newLine;
+    
+    getLocalRunFile().replaceWithText (content);
+}
+
+//=================================================================================================
+
 void AutomationServer::handleConnection (std::shared_ptr<juce::StreamingSocket> connection)
 {
     auto connectionStatus = connection->waitUntilReady (true, 1000);
     if (connectionStatus == -1)
     {
-        sendHttpErrorMessage ("failed syncing with connection reading", 500, *connection);
+        sendHttpErrorResponse ("failed syncing with connection reading", 500, *connection);
         return;
     }
 
     juce::MemoryBlock payload = readHttpPayload (*connection);
     if (payload.isEmpty())
     {
-        sendHttpErrorMessage ("invalid processing of empty payload", 500, *connection);
+        sendHttpErrorResponse ("invalid processing of empty payload", 500, *connection);
         return;
     }
 
@@ -291,7 +361,7 @@ void AutomationServer::handleConnection (std::shared_ptr<juce::StreamingSocket> 
 
     if (request.contentLength == 0 || request.contentData.length() != request.contentLength)
     {
-        sendHttpErrorMessage ("invalid content length", 500, *connection);
+        sendHttpErrorResponse ("invalid content length", 500, *connection);
         return;
     }
 
@@ -308,14 +378,14 @@ void AutomationServer::handleApplicationJsonRequest (Request request)
 {
     if (request.path.isEmpty())
     {
-        sendHttpErrorMessage ("failed parsing path", 500, *request.connection);
+        sendHttpErrorResponse ("failed parsing path", 500, *request.connection);
         return;
     }
 
     auto result = juce::JSON::parse (request.contentData, request.data);
     if (result.failed())
     {
-        sendHttpErrorMessage ("failed parsing json", 500, *request.connection);
+        sendHttpErrorResponse ("failed parsing json", 500, *request.connection);
         return;
     }
 
@@ -325,7 +395,7 @@ void AutomationServer::handleApplicationJsonRequest (Request request)
         auto it = callbacks.find (request.path);
         if (it == callbacks.end())
         {
-            sendHttpErrorMessage ("path not found", 404, *request.connection);
+            sendHttpErrorResponse ("path not found", 404, *request.connection);
             return;
         }
 
@@ -354,12 +424,11 @@ void AutomationServer::handlePythonScriptRequest (Request request)
         {
             if (result.failed())
             {
-                sendHttpErrorMessage (result.getErrorMessage(), 500, *request.connection);
+                sendHttpErrorResponse (result.getErrorMessage(), 500, *request.connection);
             }
             else
             {
-                juce::var response = makeResultVar (true);
-                sendHttpResponse (response, 200, *request.connection);
+                sendHttpResultResponse (true, 200, *request.connection);
             }
         });
     });
@@ -376,6 +445,10 @@ void AutomationServer::registerEndpoint (juce::StringRef path, EndpointCallback 
 
 void AutomationServer::registerDefaultEndpoints()
 {
+    // General
+    registerEndpoint ("/straw/sleep", &Endpoints::sleep);
+
+    // Components
     registerEndpoint ("/straw/component/exists", &Endpoints::componentExists);
     registerEndpoint ("/straw/component/visible", &Endpoints::componentVisible);
     registerEndpoint ("/straw/component/info", &Endpoints::componentInfo);

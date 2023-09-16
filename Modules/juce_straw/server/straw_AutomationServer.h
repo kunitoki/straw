@@ -14,36 +14,11 @@
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <variant>
 
 namespace straw {
-
-//=================================================================================================
-
-/**
- * @brief Create a JSON-style var representing a successful result.
- *
- * This function takes a value of type `juce::var` and wraps it in a JSON-style var to represent a successful result. It can be used to
- * prepare a response to an HTTP request where the operation was successful.
- *
- * @param value The value to be wrapped in the result var.
- *
- * @return A `juce::var` representing the successful result.
- */
-juce::var makeResultVar (const juce::var& value);
-
-/**
- * @brief Create a JSON-style var representing an error message.
- *
- * This function takes a message string and creates a JSON-style var to represent an error. It is typically used to prepare an error response
- * for an HTTP request.
- *
- * @param message The error message to be included in the var.
- *
- * @return A `juce::var` representing the error message.
- */
-juce::var makeErrorVar (juce::StringRef message);
 
 //=================================================================================================
 
@@ -83,6 +58,20 @@ void sendHttpResponse (const juce::MemoryBlock& response, juce::StringRef conten
  */
 void sendHttpResponse (const juce::Image& image, int status, juce::StreamingSocket& connection);
 
+//=================================================================================================
+
+/**
+ * @brief Send an HTTP result message response.
+ *
+ * This function sends an HTTP response with an result message. It allows you to specify the result value, HTTP status code, and the
+ * `StreamingSocket` to send the response.
+ *
+ * @param result The result object to be included in the response.
+ * @param status The HTTP status code to be included in the response.
+ * @param connection The `StreamingSocket` used to send the response.
+ */
+void sendHttpResultResponse (const juce::var& result, int status, juce::StreamingSocket& connection);
+
 /**
  * @brief Send an HTTP error message response.
  *
@@ -93,7 +82,7 @@ void sendHttpResponse (const juce::Image& image, int status, juce::StreamingSock
  * @param status The HTTP status code to be included in the response.
  * @param connection The `StreamingSocket` used to send the response.
  */
-void sendHttpErrorMessage (juce::StringRef message, int status, juce::StreamingSocket& connection);
+void sendHttpErrorResponse (juce::StringRef message, int status, juce::StreamingSocket& connection);
 
 //=================================================================================================
 
@@ -131,7 +120,7 @@ public:
      *
      * @return A juce::Result indicating the success or failure of the server start operation.
      */
-    [[nodiscard]] juce::Result start (int port = 8001);
+    [[nodiscard]] juce::Result start (std::optional<int> port = std::nullopt);
 
     /**
      * @brief Stops the automation server.
@@ -139,6 +128,11 @@ public:
      * This function stops the automation server and closes the network connection.
      */
     void stop();
+
+    /**
+     * @brief Get the current port being used.
+     */
+    [[nodiscard]] std::optional<int> getPort() const;
 
     /**
      * @brief Registers an endpoint with a callback function.
@@ -187,6 +181,7 @@ private:
     void run() override;
 
     juce::File getLocalRunFile() const;
+    void updateLocalRunFile();
     
     void handleConnection (std::shared_ptr<juce::StreamingSocket> connection);
     void handleApplicationJsonRequest (Request request);
@@ -199,7 +194,7 @@ private:
     std::unordered_map<juce::String, EndpointCallback> callbacks;
     juce::Array<juce::String> modulesToImport;
 
-    int localPort = -1;
+    std::optional<int> localPort;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AutomationServer)
     JUCE_DECLARE_WEAK_REFERENCEABLE (AutomationServer)

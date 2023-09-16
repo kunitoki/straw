@@ -13,12 +13,27 @@ namespace straw::Endpoints {
 
 //=================================================================================================
 
+void sleep (Request request)
+{
+    auto sleepTime = static_cast<int> (request.data.getProperty ("time", 100));
+    auto messageThread = static_cast<bool> (request.data.getProperty ("messageThread", false));
+
+    auto sleeperFunction = [sleepTime] { juce::Thread::sleep(sleepTime); };
+    
+    if (messageThread)
+        juce::MessageManager::callAsync (sleeperFunction);
+    else
+        sleeperFunction();
+}
+
+//=================================================================================================
+
 void componentExists (Request request)
 {
     auto componentID = request.data.getProperty ("id", "").toString().trim();
     if (componentID.isEmpty())
     {
-        sendHttpErrorMessage ("invalid component id specified", 500, *request.connection);
+        sendHttpErrorResponse ("invalid component id specified", 500, *request.connection);
         return;
     }
 
@@ -26,8 +41,7 @@ void componentExists (Request request)
     {
         juce::Component* foundComponent = Helpers::findComponentById (componentID);
 
-        juce::var response = makeResultVar (foundComponent != nullptr);
-        sendHttpResponse (response, 200, *connection);
+        sendHttpResultResponse (foundComponent != nullptr, 200, *connection);
     });
 }
 
@@ -38,7 +52,7 @@ void componentVisible (Request request)
     auto componentID = request.data.getProperty ("id", "").toString().trim();
     if (componentID.isEmpty())
     {
-        sendHttpErrorMessage ("invalid component id specified", 500, *request.connection);
+        sendHttpErrorResponse ("invalid component id specified", 500, *request.connection);
         return;
     }
 
@@ -46,8 +60,7 @@ void componentVisible (Request request)
     {
         juce::Component* foundComponent = Helpers::findComponentById (componentID);
 
-        juce::var response = makeResultVar (foundComponent != nullptr && foundComponent->isVisible());
-        sendHttpResponse (response, 200, *connection);
+        sendHttpResultResponse (foundComponent != nullptr && foundComponent->isVisible(), 200, *connection);
     });
 }
 
@@ -58,7 +71,7 @@ void componentInfo (Request request)
     auto componentID = request.data.getProperty ("id", "").toString().trim();
     if (componentID.isEmpty())
     {
-        sendHttpErrorMessage("invalid component id specified", 500, *request.connection);
+        sendHttpErrorResponse ("invalid component id specified", 500, *request.connection);
         return;
     }
 
@@ -80,7 +93,7 @@ void componentClick (Request request)
     auto componentID = request.data.getProperty ("id", "").toString().trim();
     if (componentID.isEmpty())
     {
-        sendHttpErrorMessage ("invalid component id specified", 500, *request.connection);
+        sendHttpErrorResponse ("invalid component id specified", 500, *request.connection);
         return;
     }
 
@@ -90,8 +103,7 @@ void componentClick (Request request)
     {
         Helpers::clickComponent (componentID, juce::ModifierKeys(), [request = std::move (request)]
         {
-            juce::var response = makeResultVar (true);
-            sendHttpResponse (response, 200, *request.connection);
+            sendHttpResultResponse (true, 200, *request.connection);
         }, juce::RelativeTime::milliseconds(clickTime));
     });
 }
@@ -103,7 +115,7 @@ void componentRender (Request request)
     auto componentID = request.data.getProperty ("id", "").toString().trim();
     if (componentID.isEmpty())
     {
-        sendHttpErrorMessage ("invalid component id specified", 500, *request.connection);
+        sendHttpErrorResponse ("invalid component id specified", 500, *request.connection);
         return;
     }
 
@@ -118,7 +130,7 @@ void componentRender (Request request)
         }
         else
         {
-            sendHttpErrorMessage("component id not found", 500, *request.connection);
+            sendHttpErrorResponse("component id not found", 500, *request.connection);
         }
     });
 }

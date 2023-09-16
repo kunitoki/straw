@@ -8,6 +8,10 @@ namespace straw::Endpoints {
 
 //=================================================================================================
 
+void sleep (Request request);
+
+//=================================================================================================
+
 void componentExists (Request request);
 void componentVisible (Request request);
 void componentInfo (Request request);

@@ -54,11 +54,11 @@ AutomationDemo::AutomationDemo()
                 self->setColour (juce::DocumentWindow::backgroundColourId, colour);
                 self->repaint();
                 
-                straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
+                straw::sendHttpResultResponse (true, 200, *connection);
             }
             else
             {
-                straw::sendHttpErrorMessage("Unable to find the component!", 404, *connection);
+                straw::sendHttpErrorResponse("Unable to find the component!", 404, *connection);
             }
         });
     });
