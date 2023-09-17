@@ -103,7 +103,7 @@ automationServer.registerEndpoint ("/change_background_colour", [weakMainCompone
             mainComponent->repaint();
 
             // Return a 200 OK HTTP response with a JSON payload of { "result": true }
-            straw::sendHttpResponse (straw::makeResultVar (true), 200, *connection);
+            straw::sendHttpResultResponse (true, 200, *connection);
         }
         else
         {
