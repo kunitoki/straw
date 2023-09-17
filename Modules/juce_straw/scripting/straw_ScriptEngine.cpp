@@ -37,7 +37,12 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
 {
     currentScript = code;
 
+#define STRAW_DEBUG_ENABLE_SCRIPT_CATCH 1 // (!JUCE_DEBUG)
+ 
+#if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     try
+#endif
+
     {
         py::gil_scoped_acquire acquire;
 
@@ -49,11 +54,12 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
 
         return juce::Result::ok();
     }
+
+#if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     catch (const py::error_already_set& e)
     {
         return juce::Result::fail (e.what());
     }
-#if 0 // ! JUCE_DEBUG
     catch (...)
     {
         return juce::Result::fail ("Unhandled exception while processing script");

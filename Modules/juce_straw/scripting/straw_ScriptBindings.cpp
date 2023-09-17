@@ -55,6 +55,8 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
 
     py::module_::import ("juce");
 
+    py::register_exception<ScriptException>(m, "ScriptException");
+    
     m.def("findComponent", [](py::args args) -> Component* //-> std::shared_ptr<Component>
     {
         if (args.size() != 1)
@@ -217,6 +219,11 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
             message = "unknown script exception";
 
         throw py::type_error (message.toRawUTF8());
+    });
+
+    m.def("quitApplication", []
+    {
+        juce::JUCEApplication::getInstance()->quit();
     });
 
     m.def("log", [](py::args args)
