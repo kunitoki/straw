@@ -3,13 +3,11 @@
 # straw
 Straw is a juce automation framework for integration testing.
 
-## Getting Started
-
-### Download and install the python framework
+## Download and install the python framework
 
 Go to https://www.python.org/downloads/ and download a python install. The version *3.11 is reccommended*. After installing it, make sure you write down the location of the install. For example on macOS, typically it is installed in `/Library/Frameworks/Python.framework/Versions/3.11` but you could use the `/Library/Frameworks/Python.framework/Versions/Current` symbolic link for simplicity.
 
-### Setup the dependency using cmake
+## Setup the dependency using cmake
 
 In order to configure straw in the juce project, is necessary to fetch the code for it together with specifying and finding the Python install. Once both are setup they need to be passed to the list of libraries to link. 
 
@@ -35,7 +33,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     Python::Python)
 ```
 
-### Declare and instantiate the server
+## Declare and instantiate the server
 
 In your application, add a new dependency to `straw::AutomationServer` which will start listening on port 8001.
 
@@ -79,7 +77,7 @@ curl -X GET http://localhost:8001/straw/component/exists -H 'Content-Type: appli
 # Will return a json with the result of the query { "result": true }
 ```
 
-### Registering custom endpoints
+## Registering custom endpoints
 
 It is possible to register custom endpoints:
 
@@ -126,7 +124,7 @@ This way your application can execute a remote JSON RPC callback:
 curl -X GET http://localhost:8001/change_background_colour -H 'Content-Type: application/json' -d '{"colour":"FFFF0000"}
 ```
 
-### Setting up and executing python test suites
+## Setting up and executing python test suites
 
 To execute a test suite defined as a remote python script, all is necessary to do is to first register the default `juce` and `straw` python bindings.
 
@@ -186,7 +184,7 @@ curl --data-binary '@MyTestSuite.py' http://localhost:8001 -H 'Content-Type: tex
 
 If all is good, a result JSON object is returned `{ "result": true }`
 
-### Expose custom components and custom methods to the python scripts
+## Expose custom components and custom methods to the python scripts
 
 TODO
 
