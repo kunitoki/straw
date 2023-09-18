@@ -51,6 +51,12 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     namespace py = pybind11;
 
+    // ============================================================================================ juce::JUCEApplication
+
+    py::class_<JUCEApplication, JUCEApplicationBase> (m, "JUCEApplication")
+        .def_static ("getInstance", &JUCEApplication::getInstance)
+    ;
+
     // ============================================================================================ juce::Component
 
     py::class_<Component> (m, "Component")
@@ -75,7 +81,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getScreenY", &Component::getScreenY)
         .def ("getScreenPosition", &Component::getScreenPosition)
         .def ("getScreenBounds", &Component::getScreenBounds)
-        //.def ("getTransform", &Component::getTransform)
+        .def ("getTransform", &Component::getTransform)
         .def ("isTransformed", &Component::isTransformed)
         .def ("getParentWidth", &Component::getParentWidth)
         .def ("getParentHeight", &Component::getParentHeight)

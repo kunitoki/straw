@@ -4,6 +4,7 @@
 
 #include "straw_ScriptBindings.h"
 #include "straw_ScriptException.h"
+#include "straw_ScriptUtilities.h"
 
 #include "../values/straw_VariantConverter.h"
 #include "../helpers/straw_ComponentHelpers.h"
@@ -49,18 +50,18 @@ void clearComponentTypes()
 PYBIND11_EMBEDDED_MODULE(straw, m)
 {
     namespace py = pybind11;
-    
+
     using namespace juce;
     using namespace straw;
 
     py::module_::import ("juce");
 
     py::register_exception<ScriptException>(m, "ScriptException");
-    
-    m.def("findComponent", [](py::args args) -> Component* //-> std::shared_ptr<Component>
+
+    m.def("findComponentById", [](py::args args) -> Component*
     {
         if (args.size() != 1)
-            throw ScriptException ("Missing argument componentId when calling findComponent");
+            throw ScriptException ("Missing argument componentId when calling findComponentById");
 
         //auto engine = reinterpret_cast<ScriptEngine*> (py::get_shared_data ("_ENGINE"));
         //if (engine == nullptr)
@@ -72,12 +73,33 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return {};
     }, py::return_value_policy::reference);
 
+    m.def("findComponentsByType", [](py::args args)
+    {
+        if (args.size() != 1)
+            throw ScriptException ("Missing argument typeName when calling findComponentByType");
+
+        auto components = Helpers::findComponentsByType (String (py::str (args [0])));
+        
+        py::list list;
+        for (const auto& comp : components)
+            list.append (comp);
+        return list;
+    });
+
     m.def("clickComponent", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Missing argument componentId when calling clickComponent");
 
-        Helpers::clickComponent (String (py::str (args [0])), {}, nullptr);
+        juce::Component* component = python_cast<Component*> (args [0]).value_or (nullptr);
+        if (component == nullptr)
+            component = Helpers::findComponentById (String (py::str (args [0])));
+
+        if (component != nullptr)
+        {
+            Helpers::clickComponent (component, {}, nullptr);
+            return;
+        }
     });
 
     m.def("renderComponent", [](py::args args)
@@ -88,10 +110,14 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         bool withChildren = false;
         if (args.size() > 1)
             withChildren = args [1].cast<bool>();
-        
-        if (auto component = Helpers::findComponentById (String (py::str (args [0]))))
+
+        auto component = python_cast<Component*> (args [0]).value_or (nullptr);
+        if (component == nullptr)
+            component = Helpers::findComponentById (String (py::str (args [0])));
+
+        if (component != nullptr)
             return Helpers::renderComponentToImage (component, withChildren);
-        
+
         return Image();
     });
 
@@ -100,26 +126,27 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         if (args.size() < 2)
             throw ScriptException ("Missing arguments componentID and/or methodName when calling invokeComponentCustomMethod");
 
-        if (auto component = Helpers::findComponentById (String (py::str (args [0]))))
+        auto component = python_cast<Component*> (args [0]).value_or (nullptr);
+        if (component == nullptr)
+            component = Helpers::findComponentById (String (py::str (args [0])));
+            
+        if (component != nullptr)
         {
-            auto method = component->getProperties().getVarPointer (String (py::str (args [1])));
-            if (method == nullptr)
-                throw ScriptException ("Method to invoke not found in object");
+            auto methodName = String (py::str (args [1]));
 
-            if (! method->isMethod())
-                throw ScriptException ("Method to invoke is not a method but something else");
-
-            Array<var> varArgs;
+            Array<var> arguments;
             for (std::size_t i = 2; i < args.size(); ++i)
-                varArgs.add (args [i].cast<var>());
+                arguments.add (args [i].cast<var>());
 
-            var::NativeFunctionArgs funcArgs (var(), varArgs.data(), varArgs.size());
-            return method->getNativeFunction() (funcArgs);
+            return Helpers::invokeComponentCustomMethod(component, methodName, arguments, [](StringRef exception)
+            {
+                throw ScriptException (exception);
+            });
         }
 
         return juce::var();
     });
-    
+
     m.def("assertTrue", [](py::args args)
     {
         if (args.size() != 1)

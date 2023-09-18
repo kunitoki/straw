@@ -95,8 +95,13 @@ const void* ComponentType(const juce::Component* src, const std::type_info*& typ
 {
     static_assert (std::is_base_of_v<juce::Component, T>, "Invalid unrelated polymorphism between classes");
 
-    type = &typeid(T);
-    return dynamic_cast<const T*> (src);
+    if (auto result = dynamic_cast<const T*> (src))
+    {
+        type = &typeid(T);
+        return result;
+    }
+    
+    return nullptr;
 }
 
 } // namespace straw

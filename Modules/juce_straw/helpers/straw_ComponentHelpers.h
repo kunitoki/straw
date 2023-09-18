@@ -52,6 +52,12 @@ juce::Component* findComponentById (juce::StringRef id);
 
 //=================================================================================================
 
+juce::Array<juce::Component*> findComponentsByType (juce::Component* component, juce::StringRef typeName);
+
+juce::Array<juce::Component*> findComponentsByType (juce::StringRef typeName);
+
+//=================================================================================================
+
 /**
  * @brief Generate information about a component and its hierarchy.
  *
@@ -83,19 +89,26 @@ juce::Image renderComponentToImage (juce::Component* component, bool withChildre
 //=================================================================================================
 
 /**
- * @brief Simulate a click event on a component with the specified ID.
+ * @brief Simulate a click event on a component.
  *
- * This function simulates a mouse click event on a component with the specified ID. It allows you to specify modifier keys, a callback to
+ * This function simulates a mouse click event on a component. It allows you to specify modifier keys, a callback to
  * execute after the click, and the time delay between mouse down and up events.
  *
- * @param componentID The ID of the component to click.
+ * @param component The component to click.
  * @param modifiersKeys The modifier keys to hold while clicking.
  * @param finishCallback A callback function to execute after the click.
  * @param timeBetweenMouseDownAndUp The time delay between mouse down and up events.
  */
-void clickComponent (juce::StringRef componentID,
+void clickComponent (juce::Component* component,
                      const juce::ModifierKeys& modifiersKeys,
                      std::function<void()> finishCallback,
                      juce::RelativeTime timeBetweenMouseDownAndUp = juce::RelativeTime::milliseconds(100));
+
+//=================================================================================================
+
+juce::var invokeComponentCustomMethod (juce::Component* component,
+                                       juce::StringRef methodName,
+                                       const juce::Array<juce::var>& arguments,
+                                       std::function<void(juce::StringRef)> errorCallback = nullptr);
 
 } // namespace straw::Helpers

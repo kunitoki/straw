@@ -101,10 +101,17 @@ void componentClick (Request request)
     
     juce::MessageManager::callAsync([componentID, clickTime, request = std::move (request)]
     {
-        Helpers::clickComponent (componentID, juce::ModifierKeys(), [request = std::move (request)]
+        if (juce::Component* component = Helpers::findComponentById (componentID))
         {
-            sendHttpResultResponse (true, 200, *request.connection);
-        }, juce::RelativeTime::milliseconds(clickTime));
+            Helpers::clickComponent (component, juce::ModifierKeys(), [request = std::move (request)]
+            {
+                sendHttpResultResponse (true, 200, *request.connection);
+            }, juce::RelativeTime::milliseconds(clickTime));
+        }
+        else
+        {
+            sendHttpErrorResponse("component id not found", 500, *request.connection);
+        }
     });
 }
 
@@ -123,9 +130,9 @@ void componentRender (Request request)
 
     juce::MessageManager::callAsync([componentID, withChildren, request = std::move (request)]
     {
-        if (juce::Component* foundComponent = Helpers::findComponentById (componentID))
+        if (juce::Component* component = Helpers::findComponentById (componentID))
         {
-            auto image = Helpers::renderComponentToImage (foundComponent, withChildren);
+            auto image = Helpers::renderComponentToImage (component, withChildren);
             sendHttpResponse (image, 200, *request.connection);
         }
         else

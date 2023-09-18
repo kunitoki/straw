@@ -74,6 +74,47 @@ juce::Component* findComponentById (juce::StringRef id)
 
 //=================================================================================================
 
+juce::Array<juce::Component*> findComponentsByType (juce::Component* component, juce::StringRef typeName)
+{
+    juce::Array<juce::Component*> result;
+    
+    if (demangleClassName (typeid (*component).name()) == typeName)
+        result.addIfNotAlreadyThere (component);
+
+    for (int i = 0; i < component->getNumChildComponents(); ++i)
+    {
+        if (auto child = component->getChildComponent (i); demangleClassName (typeid (*child).name()) == typeName)
+            result.addIfNotAlreadyThere (child);
+    }
+
+    for (int i = 0; i < component->getNumChildComponents(); ++i)
+    {
+        auto child = component->getChildComponent (i);
+        if (child == nullptr)
+            continue;
+
+        for (const auto& foundComponent : findComponentsByType (child, typeName))
+            result.addIfNotAlreadyThere (foundComponent);
+    }
+
+    return result;
+}
+
+juce::Array<juce::Component*> findComponentsByType (juce::StringRef typeName)
+{
+    juce::Array<juce::Component*> result;
+    
+    for (int i = 0; i < juce::Desktop::getInstance().getNumComponents(); ++i)
+    {
+        for (const auto& foundComponent : findComponentsByType (juce::Desktop::getInstance().getComponent (i), typeName))
+            result.addIfNotAlreadyThere (foundComponent);
+    }
+
+    return result;
+}
+
+//=================================================================================================
+
 juce::var makeComponentInfo (juce::Component* component, bool recursive)
 {
     juce::DynamicObject::Ptr object = new juce::DynamicObject;
@@ -145,22 +186,15 @@ juce::Image renderComponentToImage (juce::Component* component, bool withChildre
 
 //=================================================================================================
 
-void clickComponent (juce::StringRef componentID,
+void clickComponent (juce::Component* component,
                      const juce::ModifierKeys& modifiersKeys,
                      std::function<void()> finishCallback,
                      juce::RelativeTime timeBetweenMouseDownAndUp)
 {
+    jassert (component != nullptr);
     jassert (juce::MessageManager::getInstance()->isThisTheMessageThread());
     
     auto mouseDownTime = juce::Time::getCurrentTime();
-    
-    juce::Component* component = Helpers::findComponentById (componentID);
-    if (component == nullptr)
-    {
-        finishCallback();
-        return;
-    }
-    
     auto mouseDownPos = component->getScreenBounds().getCentre().toFloat();
     
     juce::MouseEvent ev1
@@ -215,6 +249,27 @@ void clickComponent (juce::StringRef componentID,
         finishCallback();
     
     juce::MessageManager::getInstance()->runDispatchLoopUntil(1);
+}
+
+//=================================================================================================
+
+juce::var invokeComponentCustomMethod (juce::Component* component,
+                                       juce::StringRef methodName,
+                                       const juce::Array<juce::var>& arguments,
+                                       std::function<void(juce::StringRef)> errorCallback)
+{
+    if (component == nullptr)
+        return juce::var();
+    
+    auto method = component->getProperties().getVarPointer (juce::String (methodName));
+    if (method == nullptr)
+        return errorCallback ? errorCallback("Method to invoke not found in object") : void(), juce::var();
+
+    if (! method->isMethod())
+        return errorCallback ? errorCallback("Method to invoke is not a method but something else") : void(), juce::var();
+
+    juce::var::NativeFunctionArgs funcArgs (juce::var(), arguments.data(), arguments.size());
+    return method->getNativeFunction() (funcArgs);
 }
 
 } // namespace straw::Helpers
