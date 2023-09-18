@@ -126,7 +126,63 @@ curl -X GET http://localhost:8001/change_background_colour -H 'Content-Type: app
 
 ### Setting up and executing python test suites
 
-TODO
+To execute a test suite defined as a remote python script, all is necessary to do is to first register the default `juce` and `straw` python bindings.
+
+```cpp
+
+// Create the animation server instance
+automationServer = std::make_unique<straw::AutomationServer>();
+
+// Register default endpoints (needed for the remote test suite script execution)
+automationServer->registerDefaultEndpoints();
+
+// Register default bindings (juce classes and straw helper methods)
+automationServer->registerDefaultComponents();
+
+// Start the HTTP server
+auto result = automationServer->start();
+```
+
+Then it's possible to send a `text/x-python` script to the automation server and it will be executed, content of `MyTestSuite.py`:
+
+```python
+import straw
+
+straw.log ("Testing findComponent ====================")
+
+comp = straw.findComponentById ("non-existing")
+straw.assertTrue (comp is None)
+
+comp = straw.findComponentById ("button")
+straw.assertEqual (comp.typeName(), "juce::TextButton")
+straw.assertEqual (comp.getComponentID(), "button")
+straw.assertTrue (comp is not None)
+straw.assertTrue (comp.isVisible())
+straw.assertTrue (comp.isShowing())
+
+properties = comp.getProperties()
+straw.assertEqual (len (properties), 1)
+straw.assertTrue ("example" in properties)
+straw.assertEqual (properties["example"], 1337)
+
+comp = straw.findComponentById ("slider")
+straw.assertEqual (comp.typeName(), "juce::Slider")
+straw.assertGreaterThan (comp.getValue(), 0.0)
+
+comp = straw.findComponentById ("animation")
+children = comp.getChildren()
+straw.assertEqual (len (children), 2)
+straw.assertTrue ([x for x in children if x.getComponentID() == "button"])
+straw.assertTrue ([x for x in children if x.getComponentID() == "slider"])
+```
+
+And send it to the automation server for evaluation:
+
+```sh
+curl --data-binary '@MyTestSuite.py' http://localhost:8001 -H 'Content-Type: text/x-python'
+```
+
+If all is good, a result JSON object is returned `{ "result": true }`
 
 ### Expose custom components and custom methods to the python scripts
 
