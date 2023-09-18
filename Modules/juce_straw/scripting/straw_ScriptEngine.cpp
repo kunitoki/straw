@@ -6,9 +6,46 @@
 #include "straw_ScriptBindings.h"
 #include "straw_ScriptException.h"
 
+#include <regex>
+
+#define STRAW_DEBUG_ENABLE_SCRIPT_CATCH 1
+
 namespace straw {
 
 namespace py = pybind11;
+
+//=================================================================================================
+
+namespace {
+
+juce::String replaceBrokenLineNumbers (const juce::String& input)
+{
+    static const std::regex pattern ("<string>\\((\\d+)\\)");
+    
+    juce::String output;
+    std::string result = input.toStdString();
+    std::ptrdiff_t startPos = 0;
+    
+    std::smatch match;
+    while (std::regex_search (result, match, pattern))
+    {
+        if (match.size() > 1)
+        {
+            output
+            << input.substring (static_cast<int> (startPos), static_cast<int> (match.position() - startPos))
+            << "<string>(" << (std::stoi (match[1]) - 1) << ")";
+            
+            startPos = match.position() + match.length();
+        }
+        
+        result = match.suffix();
+    }
+    
+    output << result;
+    return output;
+}
+
+} // namespace
 
 //=================================================================================================
 
@@ -24,6 +61,8 @@ ScriptEngine::ScriptEngine(juce::Array<juce::String> modules)
     : pythonEngine (getMainPythonEngine())
     , customModules (std::move (modules))
 {
+    customModules.addIfNotAlreadyThere("straw");
+    
     py::set_shared_data ("_ENGINE", this);
 }
 
@@ -37,8 +76,6 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
 {
     currentScript = code;
 
-#define STRAW_DEBUG_ENABLE_SCRIPT_CATCH 1 // (!JUCE_DEBUG)
- 
 #if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     try
 #endif
@@ -46,11 +83,13 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
     {
         py::gil_scoped_acquire acquire;
 
-        py::dict locals;
+        py::dict globals, locals;
         for (const auto& m : customModules)
-            locals [m.toRawUTF8()] = py::module_::import (m.toRawUTF8());
+            globals [m.toRawUTF8()] = py::module_::import (m.toRawUTF8());
 
-        py::exec({ code.toRawUTF8(), code.getNumBytesAsUTF8() }, py::globals(), locals);
+        py::str pythonCode { code.toRawUTF8(), code.getNumBytesAsUTF8() };
+
+        py::exec (std::move (pythonCode), globals, locals);
 
         return juce::Result::ok();
     }
@@ -58,7 +97,7 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
 #if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     catch (const py::error_already_set& e)
     {
-        return juce::Result::fail (e.what());
+        return juce::Result::fail (replaceBrokenLineNumbers (e.what()));
     }
     catch (...)
     {
