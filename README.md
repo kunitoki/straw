@@ -11,6 +11,8 @@ Go to https://www.python.org/downloads/ and download a python install. The versi
 
 ### Setup the dependency using cmake
 
+In order to configure straw in the juce project, is necessary to fetch the code for it together with specifying and finding the Python install. Once both are setup they need to be passed to the list of libraries to link. 
+
 ```cmake
 # Fetch the dependency using FetchContent
 Include (FetchContent)
@@ -33,7 +35,7 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     Python::Python)
 ```
 
-### Declare and instantiate the server
+### Declare and instantiate the server
 
 In your application, add a new dependency to `straw::AutomationServer` which will start listening on port 8001.
 
