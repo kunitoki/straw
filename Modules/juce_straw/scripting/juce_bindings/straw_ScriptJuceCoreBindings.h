@@ -69,6 +69,17 @@ public:
 };
 
 template <>
+struct type_caster<juce::StringArray>
+{
+public:
+    PYBIND11_TYPE_CASTER (juce::StringArray, const_name ("StringArray"));
+
+    bool load (handle src, bool convert);
+
+    static handle cast (const juce::StringArray& src, return_value_policy policy, handle parent);
+};
+
+template <>
 struct type_caster<juce::NamedValueSet>
 {
 public:

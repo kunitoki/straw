@@ -162,19 +162,19 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
     {
         list list;
 
-        auto array = src.getArray();
-        for (const auto& value : *array)
-            list.append (value);
+        if (auto array = src.getArray())
+        {
+            for (const auto& value : *array)
+                list.append (value);
+        }
 
         return list;
     }
 
     else if (src.isBinaryData())
     {
-        auto data = src.getBinaryData();
-        return bytes (
-            static_cast<const char*> (data->getData()),
-            static_cast<Py_ssize_t> (data->getSize()));
+        if (auto data = src.getBinaryData())
+            return bytes (static_cast<const char*> (data->getData()), static_cast<Py_ssize_t> (data->getSize()));
     }
 
     else if (src.isMethod())
@@ -191,20 +191,60 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
 
 //=================================================================================================
 
-bool type_caster<juce::NamedValueSet>::load (handle src, bool convert)
+bool type_caster<juce::StringArray>::load (handle src, bool convert)
 {
-    if (!isinstance<dict>(src))
+    if (! isinstance<dict> (src))
         return false;
 
     value.clear();
 
-    auto d = reinterpret_borrow<dict>(src);
+    auto d = reinterpret_borrow<list> (src);
+    for (auto it : d)
+    {
+        make_caster<juce::String> conv;
+
+        if (! conv.load (it.ptr(), convert))
+            return false;
+
+        value.add (cast_op<juce::String&&> (std::move (conv)));
+    }
+
+    return true;
+}
+
+handle type_caster<juce::StringArray>::cast (const juce::StringArray& src, return_value_policy policy, handle parent)
+{
+    list l;
+
+    for (const auto& value : src)
+    {
+        auto item = reinterpret_steal<object> (make_caster<juce::String>::cast (value, policy, parent));
+
+        if (! item)
+            return handle();
+
+        l.append (std::move (item));
+    }
+
+    return l.release();
+}
+
+//=================================================================================================
+
+bool type_caster<juce::NamedValueSet>::load (handle src, bool convert)
+{
+    if (! isinstance<dict> (src))
+        return false;
+
+    value.clear();
+
+    auto d = reinterpret_borrow<dict> (src);
     for (auto it : d)
     {
         make_caster<juce::Identifier> kconv;
         make_caster<juce::var> vconv;
 
-        if (!kconv.load(it.first.ptr(), convert) || !vconv.load(it.second.ptr(), convert))
+        if (! kconv.load (it.first.ptr(), convert) || ! vconv.load (it.second.ptr(), convert))
             return false;
 
         value.set (cast_op<juce::Identifier&&> (std::move (kconv)), cast_op<juce::var&&> (std::move (vconv)));
@@ -222,7 +262,7 @@ handle type_caster<juce::NamedValueSet>::cast (const juce::NamedValueSet& src, r
         auto key = reinterpret_steal<object> (make_caster<juce::Identifier>::cast (kv.name, policy, parent));
         auto value = reinterpret_steal<object> (make_caster<juce::var>::cast (kv.value, policy, parent));
 
-        if (!key || !value)
+        if (! key || ! value)
             return handle();
 
         d [std::move (key)] = std::move (value);
@@ -355,7 +395,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     classChildProcess
         .def (py::init<>())
         .def ("start", py::overload_cast<const String &, int>(&ChildProcess::start))
-        //.def ("start", py::overload_cast<const StringArray &, int>(&ChildProcess::start))
+        .def ("start", py::overload_cast<const StringArray &, int>(&ChildProcess::start))
         .def ("isRunning", &ChildProcess::isRunning)
         .def ("readProcessOutput", &ChildProcess::readProcessOutput)
         .def ("readAllProcessOutput", &ChildProcess::readAllProcessOutput)
@@ -418,7 +458,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("copyFileTo", &File::copyFileTo)
         .def ("replaceFileIn", &File::replaceFileIn)
         .def ("copyDirectoryTo", &File::copyDirectoryTo)
-        //.def ("findChildFiles", py::overload_cast<int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
+        .def ("findChildFiles", py::overload_cast<int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
         //.def ("findChildFiles", py::overload_cast<int &, int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
         .def ("getNumberOfChildFiles", &File::getNumberOfChildFiles)
         .def ("containsSubDirectories", &File::containsSubDirectories)
@@ -464,6 +504,30 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("addToDock", &File::addToDock)
         .def_static ("getContainerForSecurityApplicationGroupIdentifier", &File::getContainerForSecurityApplicationGroupIdentifier)
     ;
+
+    py::enum_<File::SpecialLocationType> (classFile, "SpecialLocationType")
+        .value("commonApplicationDataDirectory", File::SpecialLocationType::commonApplicationDataDirectory)
+        .value("commonDocumentsDirectory", File::SpecialLocationType::commonDocumentsDirectory)
+        .value("currentApplicationFile", File::SpecialLocationType::currentApplicationFile)
+        .value("currentExecutableFile", File::SpecialLocationType::currentExecutableFile)
+        .value("globalApplicationsDirectory", File::SpecialLocationType::globalApplicationsDirectory)
+        .value("hostApplicationPath", File::SpecialLocationType::hostApplicationPath)
+        .value("invokedExecutableFile", File::SpecialLocationType::invokedExecutableFile)
+        .value("tempDirectory", File::SpecialLocationType::tempDirectory)
+        .value("userApplicationDataDirectory", File::SpecialLocationType::userApplicationDataDirectory)
+        .value("userDesktopDirectory", File::SpecialLocationType::userDesktopDirectory)
+        .value("userDocumentsDirectory", File::SpecialLocationType::userDocumentsDirectory)
+        .value("userHomeDirectory", File::SpecialLocationType::userHomeDirectory)
+        .value("userMoviesDirectory", File::SpecialLocationType::userMoviesDirectory)
+        .value("userMusicDirectory", File::SpecialLocationType::userMusicDirectory)
+        .value("userPicturesDirectory", File::SpecialLocationType::userPicturesDirectory)
+        .export_values();
+
+    py::enum_<File::FollowSymlinks> (classFile, "FollowSymlinks")
+        .value("no", File::FollowSymlinks::no)
+        .value("noCycles", File::FollowSymlinks::noCycles)
+        .value("yes", File::FollowSymlinks::yes)
+        .export_values();
 
     // ============================================================================================ juce::URL
     

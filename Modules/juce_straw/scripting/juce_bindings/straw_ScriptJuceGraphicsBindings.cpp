@@ -570,7 +570,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     //.def ("getPixelData", &Image::getPixelData)
     ;
     
-    py::enum_<Image::PixelFormat> (imageClass, "Image")
+    py::enum_<Image::PixelFormat> (imageClass, "PixelFormat")
         .value("UnknownFormat", Image::PixelFormat::UnknownFormat)
         .value("RGB", Image::PixelFormat::RGB)
         .value("ARGB", Image::PixelFormat::ARGB)
