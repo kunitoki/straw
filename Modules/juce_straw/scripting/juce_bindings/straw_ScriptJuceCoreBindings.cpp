@@ -155,7 +155,7 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
         for (const auto& props : dynamicObject->getProperties())
             result [props.name.toString().toRawUTF8()] = props.value;
 
-        return result;
+        return result.release();
     }
 
     else if (src.isArray())
@@ -168,13 +168,13 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
                 list.append (value);
         }
 
-        return list;
+        return list.release();
     }
 
     else if (src.isBinaryData())
     {
         if (auto data = src.getBinaryData())
-            return bytes (static_cast<const char*> (data->getData()), static_cast<Py_ssize_t> (data->getSize()));
+            return bytes (static_cast<const char*> (data->getData()), static_cast<Py_ssize_t> (data->getSize())).release();
     }
 
     else if (src.isMethod())
@@ -183,7 +183,7 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
         {
             juce::var::NativeFunctionArgs args (juce::var(), nullptr, 0);
             return src.getNativeFunction() (args);
-        });
+        }).release();
     }
 
     return Py_None;
@@ -193,7 +193,7 @@ handle type_caster<juce::var>::cast (const juce::var& src, return_value_policy p
 
 bool type_caster<juce::StringArray>::load (handle src, bool convert)
 {
-    if (! isinstance<dict> (src))
+    if (! isinstance<list> (src))
         return false;
 
     value.clear();
@@ -281,7 +281,32 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 {
     using namespace juce;
     namespace py = pybind11;
+    
+    // ============================================================================================ juce::PropertySet
 
+    py::class_<PropertySet> classPropertySet (m, "PropertySet");
+    classPropertySet
+        .def (py::init<>())
+        .def (py::init<const PropertySet&>())
+        .def ("getValue", &PropertySet::getValue)
+        .def ("getIntValue", &PropertySet::getIntValue)
+        .def ("getDoubleValue", &PropertySet::getDoubleValue)
+        .def ("getBoolValue", &PropertySet::getBoolValue)
+        .def ("getXmlValue", &PropertySet::getXmlValue)
+        .def ("setValue", py::overload_cast<StringRef, const var &>(&PropertySet::setValue))
+        //.def ("setValue", py::overload_cast<StringRef, const XmlElement *>(&PropertySet::setValue))
+        .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom)
+        .def ("removeValue", &PropertySet::removeValue)
+        .def ("containsKey", &PropertySet::containsKey)
+        .def ("clear", &PropertySet::clear)
+        .def ("getAllProperties", &PropertySet::getAllProperties)
+        .def ("getLock", &PropertySet::getLock)
+        //.def ("createXml", &PropertySet::createXml)
+        //.def ("restoreFromXml", &PropertySet::restoreFromXml)
+        .def ("setFallbackPropertySet", &PropertySet::setFallbackPropertySet)
+        .def ("getFallbackPropertySet", &PropertySet::getFallbackPropertySet)
+    ;    
+    
     // ============================================================================================ juce::MemoryBlock
     
     py::class_<MemoryBlock> classMemoryBlock (m, "MemoryBlock");
@@ -289,7 +314,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def (py::init<>())
         .def (py::init<const size_t, bool>())
         .def (py::init<const MemoryBlock&>())
-        //.def (py::init<const void*, size_t>())
+    //.def (py::init<const void*, size_t>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("matches", &MemoryBlock::matches)
@@ -458,8 +483,8 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("copyFileTo", &File::copyFileTo)
         .def ("replaceFileIn", &File::replaceFileIn)
         .def ("copyDirectoryTo", &File::copyDirectoryTo)
-        .def ("findChildFiles", py::overload_cast<int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
-        //.def ("findChildFiles", py::overload_cast<int &, int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
+    //.def ("findChildFiles", py::overload_cast<int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
+    //.def ("findChildFiles", py::overload_cast<int &, int, bool, const String &, File::FollowSymlinks>(&File::findChildFiles, py::const_))
         .def ("getNumberOfChildFiles", &File::getNumberOfChildFiles)
         .def ("containsSubDirectories", &File::containsSubDirectories)
         .def ("createInputStream", &File::createInputStream)
@@ -499,7 +524,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("isSymbolicLink", &File::isSymbolicLink)
         .def ("getLinkedTarget", &File::getLinkedTarget)
         .def ("getNativeLinkedTarget", &File::getNativeLinkedTarget)
-        // .def ("getMacOSType", &File::getMacOSType)
+    // .def ("getMacOSType", &File::getMacOSType)
         .def ("isBundle", &File::isBundle)
         .def ("addToDock", &File::addToDock)
         .def_static ("getContainerForSecurityApplicationGroupIdentifier", &File::getContainerForSecurityApplicationGroupIdentifier)
@@ -646,6 +671,96 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
                        [](const URL::DownloadTaskOptions& self) { return self.usePost; },
                        [](URL::DownloadTaskOptions& self, bool v) { self.usePost = v; })
     ;
+    
+    // ============================================================================================ juce::SystemStats
+    
+    py::class_<SystemStats> classSystemStats (m, "SystemStats");
+    classSystemStats
+        .def_static ("getJUCEVersion", &SystemStats::getJUCEVersion)
+        .def_static ("getOperatingSystemType", &SystemStats::getOperatingSystemType)
+        .def_static ("getOperatingSystemName", &SystemStats::getOperatingSystemName)
+        .def_static ("isOperatingSystem64Bit", &SystemStats::isOperatingSystem64Bit)
+        .def_static ("getEnvironmentVariable", &SystemStats::getEnvironmentVariable)
+        .def_static ("getLogonName", &SystemStats::getLogonName)
+        .def_static ("getFullUserName", &SystemStats::getFullUserName)
+        .def_static ("getComputerName", &SystemStats::getComputerName)
+        .def_static ("getUserLanguage", &SystemStats::getUserLanguage)
+        .def_static ("getUserRegion", &SystemStats::getUserRegion)
+        .def_static ("getDisplayLanguage", &SystemStats::getDisplayLanguage)
+        .def_static ("getDeviceDescription", &SystemStats::getDeviceDescription)
+        .def_static ("getDeviceManufacturer", &SystemStats::getDeviceManufacturer)
+        .def_static ("getUniqueDeviceID", &SystemStats::getUniqueDeviceID)
+        .def_static ("getMachineIdentifiers", &SystemStats::getMachineIdentifiers)
+        .def_static ("getNumCpus", &SystemStats::getNumCpus)
+        .def_static ("getNumPhysicalCpus", &SystemStats::getNumPhysicalCpus)
+        .def_static ("getCpuSpeedInMegahertz", &SystemStats::getCpuSpeedInMegahertz)
+        .def_static ("getCpuVendor", &SystemStats::getCpuVendor)
+        .def_static ("getCpuModel", &SystemStats::getCpuModel)
+        .def_static ("hasMMX", &SystemStats::hasMMX)
+        .def_static ("has3DNow", &SystemStats::has3DNow)
+        .def_static ("hasFMA3", &SystemStats::hasFMA3)
+        .def_static ("hasFMA4", &SystemStats::hasFMA4)
+        .def_static ("hasSSE", &SystemStats::hasSSE)
+        .def_static ("hasSSE2", &SystemStats::hasSSE2)
+        .def_static ("hasSSE3", &SystemStats::hasSSE3)
+        .def_static ("hasSSSE3", &SystemStats::hasSSSE3)
+        .def_static ("hasSSE41", &SystemStats::hasSSE41)
+        .def_static ("hasSSE42", &SystemStats::hasSSE42)
+        .def_static ("hasAVX", &SystemStats::hasAVX)
+        .def_static ("hasAVX2", &SystemStats::hasAVX2)
+        .def_static ("hasAVX512F", &SystemStats::hasAVX512F)
+        .def_static ("hasAVX512BW", &SystemStats::hasAVX512BW)
+        .def_static ("hasAVX512CD", &SystemStats::hasAVX512CD)
+        .def_static ("hasAVX512DQ", &SystemStats::hasAVX512DQ)
+        .def_static ("hasAVX512ER", &SystemStats::hasAVX512ER)
+        .def_static ("hasAVX512IFMA", &SystemStats::hasAVX512IFMA)
+        .def_static ("hasAVX512PF", &SystemStats::hasAVX512PF)
+        .def_static ("hasAVX512VBMI", &SystemStats::hasAVX512VBMI)
+        .def_static ("hasAVX512VL", &SystemStats::hasAVX512VL)
+        .def_static ("hasAVX512VPOPCNTDQ", &SystemStats::hasAVX512VPOPCNTDQ)
+        .def_static ("hasNeon", &SystemStats::hasNeon)
+        .def_static ("getMemorySizeInMegabytes", &SystemStats::getMemorySizeInMegabytes)
+        .def_static ("getPageSize", &SystemStats::getPageSize)
+        .def_static ("getStackBacktrace", &SystemStats::getStackBacktrace)
+        //.def_static ("setApplicationCrashHandler", &SystemStats::setApplicationCrashHandler)
+    ;
+
+    py::enum_<SystemStats::OperatingSystemType> (classSystemStats, "OperatingSystemType")
+        .value("UnknownOS", SystemStats::OperatingSystemType::UnknownOS)
+        .value("MacOSX", SystemStats::OperatingSystemType::MacOSX)
+        .value("Windows", SystemStats::OperatingSystemType::Windows)
+        .value("Linux", SystemStats::OperatingSystemType::Linux)
+        .value("Android", SystemStats::OperatingSystemType::Android)
+        .value("iOS", SystemStats::OperatingSystemType::iOS)
+        .value("WASM", SystemStats::OperatingSystemType::WASM)
+        .value("MacOSX_10_7", SystemStats::OperatingSystemType::MacOSX_10_7)
+        .value("MacOSX_10_8", SystemStats::OperatingSystemType::MacOSX_10_8)
+        .value("MacOSX_10_9", SystemStats::OperatingSystemType::MacOSX_10_9)
+        .value("MacOSX_10_10", SystemStats::OperatingSystemType::MacOSX_10_10)
+        .value("MacOSX_10_11", SystemStats::OperatingSystemType::MacOSX_10_11)
+        .value("MacOSX_10_12", SystemStats::OperatingSystemType::MacOSX_10_12)
+        .value("MacOSX_10_13", SystemStats::OperatingSystemType::MacOSX_10_13)
+        .value("MacOSX_10_14", SystemStats::OperatingSystemType::MacOSX_10_14)
+        .value("MacOSX_10_15", SystemStats::OperatingSystemType::MacOSX_10_15)
+        .value("MacOS_11", SystemStats::OperatingSystemType::MacOS_11)
+        .value("MacOS_12", SystemStats::OperatingSystemType::MacOS_12)
+        .value("MacOS_13", SystemStats::OperatingSystemType::MacOS_13)
+        .value("Win2000", SystemStats::OperatingSystemType::Win2000)
+        .value("WinXP", SystemStats::OperatingSystemType::WinXP)
+        .value("WinVista", SystemStats::OperatingSystemType::WinVista)
+        .value("Windows7", SystemStats::OperatingSystemType::Windows7)
+        .value("Windows8_0", SystemStats::OperatingSystemType::Windows8_0)
+        .value("Windows8_1", SystemStats::OperatingSystemType::Windows8_1)
+        .value("Windows10", SystemStats::OperatingSystemType::Windows10)
+        .value("Windows11", SystemStats::OperatingSystemType::Windows11)
+        .export_values();
+
+    py::enum_<SystemStats::MachineIdFlags> (classSystemStats, "MachineIdFlags")
+        .value("macAddresses", SystemStats::MachineIdFlags::macAddresses)
+        .value("fileSystemId", SystemStats::MachineIdFlags::fileSystemId)
+        .value("legacyUniqueId", SystemStats::MachineIdFlags::legacyUniqueId)
+        .value("uniqueId", SystemStats::MachineIdFlags::uniqueId)
+        .export_values();
 }
 
 } // namespace straw::Bindings

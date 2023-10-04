@@ -24,6 +24,8 @@ void registerJuceCoreBindings (pybind11::module_& m);
 namespace PYBIND11_NAMESPACE {
 namespace detail {
 
+//=================================================================================================
+
 template <>
 struct type_caster<juce::String>
 {
@@ -34,6 +36,8 @@ public:
 
     static handle cast (const juce::String& src, return_value_policy policy, handle parent);
 };
+
+//=================================================================================================
 
 template <>
 struct type_caster<juce::StringRef>
@@ -46,6 +50,8 @@ public:
     static handle cast (const juce::StringRef& src, return_value_policy policy, handle parent);
 };
 
+//=================================================================================================
+
 template <>
 struct type_caster<juce::Identifier>
 {
@@ -56,6 +62,8 @@ public:
 
     static handle cast (const juce::Identifier& src, return_value_policy policy, handle parent);
 };
+
+//=================================================================================================
 
 template <>
 struct type_caster<juce::var>
@@ -68,6 +76,8 @@ public:
     static handle cast (const juce::var& src, return_value_policy policy, handle parent);
 };
 
+//=================================================================================================
+
 template <>
 struct type_caster<juce::StringArray>
 {
@@ -79,6 +89,8 @@ public:
     static handle cast (const juce::StringArray& src, return_value_policy policy, handle parent);
 };
 
+//=================================================================================================
+
 template <>
 struct type_caster<juce::NamedValueSet>
 {
@@ -88,6 +100,53 @@ public:
     bool load (handle src, bool convert);
 
     static handle cast (const juce::NamedValueSet& src, return_value_policy policy, handle parent);
+};
+
+//=================================================================================================
+
+template <class T>
+struct type_caster<juce::Array<T>>
+{
+public:
+    PYBIND11_TYPE_CASTER (juce::Array<T>, const_name ("Array[]"));
+    
+    bool load (handle src, bool convert)
+    {
+        if (! isinstance<list> (src))
+            return false;
+
+        value.clear();
+
+        auto l = reinterpret_borrow<list> (src);
+        for (auto it : l)
+        {
+            make_caster<T> conv;
+
+            if (! conv.load (it.ptr(), convert))
+                return false;
+
+            value.add (cast_op<T&&> (std::move (conv)));
+        }
+
+        return true;
+    }
+
+    handle cast (const juce::Array<T>& src, return_value_policy policy, handle parent)
+    {
+        list l;
+
+        for (const auto& arrayItem : src)
+        {
+            auto item = reinterpret_steal<object> (make_caster<T>::cast (arrayItem, policy, parent));
+
+            if (! item)
+                return handle();
+
+            l.append (std::move (item));
+        }
+
+        return l.release();
+    }
 };
 
 } // namespace detail
