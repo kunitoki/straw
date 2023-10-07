@@ -9,6 +9,7 @@ elseif((CMAKE_CXX_COMPILER_ID STREQUAL "Clang") OR (CMAKE_CXX_COMPILER_ID STREQU
         -Wno-shadow-field
         -Wno-shadow-uncaptured-local
         -Wno-self-assign-overloaded
+        -Wno-gnu-zero-variadic-macro-arguments
         -Wno-float-equal)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(juce_straw_recommended_warning_flags INTERFACE
@@ -16,6 +17,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wno-shadow-field
         -Wno-shadow-uncaptured-local
         -Wno-self-assign-overloaded
+        -Wno-gnu-zero-variadic-macro-arguments
         -Wno-float-equal)
 endif()
 
