@@ -281,34 +281,162 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 {
     using namespace juce;
     namespace py = pybind11;
-    
-    // ============================================================================================ juce::PropertySet
 
-    py::class_<PropertySet> classPropertySet (m, "PropertySet");
-    classPropertySet
+    // ============================================================================================ juce::ByteOrder
+
+    py::class_<ByteOrder> classByteOrder (m, "ByteOrder");
+    classByteOrder
+        .def_static ("swap", static_cast<uint16 (*)(uint16)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<int16 (*)(int16)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<uint32 (*)(uint32)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<int32 (*)(int32)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<uint64 (*)(uint64)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<int64 (*)(int64)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<float (*)(float)>(&ByteOrder::swap))
+        .def_static ("swap", static_cast<double (*)(double)>(&ByteOrder::swap))
+        .def_static ("littleEndianInt", &ByteOrder::littleEndianInt)
+        .def_static ("littleEndianInt64", &ByteOrder::littleEndianInt64)
+        .def_static ("littleEndianShort", &ByteOrder::littleEndianShort)
+        .def_static ("littleEndian24Bit", &ByteOrder::littleEndian24Bit)
+        .def_static ("littleEndian24BitToChars", &ByteOrder::littleEndian24BitToChars)
+        .def_static ("bigEndianInt", &ByteOrder::bigEndianInt)
+        .def_static ("bigEndianInt64", &ByteOrder::bigEndianInt64)
+        .def_static ("bigEndianShort", &ByteOrder::bigEndianShort)
+        .def_static ("bigEndian24Bit", &ByteOrder::bigEndian24Bit)
+        .def_static ("bigEndian24BitToChars", &ByteOrder::bigEndian24BitToChars)
+        .def_static ("makeInt", static_cast<uint16 (*)(uint8, uint8)>(&ByteOrder::makeInt))
+        .def_static ("makeInt", static_cast<uint32 (*)(uint8, uint8, uint8, uint8)>(&ByteOrder::makeInt))
+        .def_static ("makeInt", static_cast<uint64 (*)(uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint8)>(&ByteOrder::makeInt))
+        .def_static ("isBigEndian", &ByteOrder::isBigEndian)
+    ;
+
+    // ============================================================================================ juce::Base64
+
+    py::class_<Base64> classBase64 (m, "Base64");
+    classBase64
+        .def_static ("convertToBase64", &Base64::convertToBase64)
+        .def_static ("convertFromBase64", &Base64::convertFromBase64)
+    //.def_static ("toBase64", static_cast<String (*)(const void *, int)>(&Base64::toBase64))
+        .def_static ("toBase64", static_cast<String (*)(const String &)>(&Base64::toBase64))
+    ;
+
+    // ============================================================================================ juce::Result
+
+    py::class_<Result> classResult (m, "Result");
+    classResult
+        .def_static ("ok", &Result::ok)
+        .def_static ("fail", &Result::fail)
+        .def ("wasOk", &Result::wasOk)
+        .def ("failed", &Result::failed)
+        .def ("getErrorMessage", &Result::getErrorMessage)
+        // .def ("operator=", py::overload_cast<const Result &>(&Result::operator=))
+        // .def ("operator=", py::overload_cast<Result &&>(&Result::operator=))
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (!py::self)
+    ;
+
+    // ============================================================================================ juce::Uuid
+
+    py::class_<Uuid> classUuid (m, "Uuid");
+    classUuid
         .def (py::init<>())
-        .def (py::init<const PropertySet&>())
-        .def ("getValue", &PropertySet::getValue)
-        .def ("getIntValue", &PropertySet::getIntValue)
-        .def ("getDoubleValue", &PropertySet::getDoubleValue)
-        .def ("getBoolValue", &PropertySet::getBoolValue)
-        .def ("getXmlValue", &PropertySet::getXmlValue)
-        .def ("setValue", py::overload_cast<StringRef, const var &>(&PropertySet::setValue))
-        //.def ("setValue", py::overload_cast<StringRef, const XmlElement *>(&PropertySet::setValue))
-        .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom)
-        .def ("removeValue", &PropertySet::removeValue)
-        .def ("containsKey", &PropertySet::containsKey)
-        .def ("clear", &PropertySet::clear)
-        .def ("getAllProperties", &PropertySet::getAllProperties)
-        .def ("getLock", &PropertySet::getLock)
-        //.def ("createXml", &PropertySet::createXml)
-        //.def ("restoreFromXml", &PropertySet::restoreFromXml)
-        .def ("setFallbackPropertySet", &PropertySet::setFallbackPropertySet)
-        .def ("getFallbackPropertySet", &PropertySet::getFallbackPropertySet)
-    ;    
-    
+        .def ("isNull", &Uuid::isNull)
+        .def_static ("null", &Uuid::null)
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (py::self < py::self)
+        .def (py::self > py::self)
+        .def (py::self <= py::self)
+        .def (py::self >= py::self)
+    //.def (py::self = String())
+    //.def (py::self = Uuid())
+        .def ("toString", &Uuid::toString)
+        .def ("toDashedString", &Uuid::toDashedString)
+        .def ("getTimeLow", &Uuid::getTimeLow)
+        .def ("getTimeMid", &Uuid::getTimeMid)
+        .def ("getTimeHighAndVersion", &Uuid::getTimeHighAndVersion)
+        .def ("getClockSeqAndReserved", &Uuid::getClockSeqAndReserved)
+        .def ("getClockSeqLow", &Uuid::getClockSeqLow)
+        .def ("getNode", &Uuid::getNode)
+        .def ("hash", &Uuid::hash)
+        .def ("getRawData", &Uuid::getRawData)
+    ;
+
+    // ============================================================================================ juce::RelativeTime
+
+    py::class_<RelativeTime> classRelativeTime (m, "RelativeTime");
+    classRelativeTime
+        .def (py::init<>())
+        //.def_static ("milliseconds", static_cast<RelativeTime (*)(int)>(&RelativeTime::milliseconds))
+        .def_static ("milliseconds", static_cast<RelativeTime (*)(int64)>(&RelativeTime::milliseconds))
+        .def_static ("seconds", &RelativeTime::seconds)
+        .def_static ("minutes", &RelativeTime::minutes)
+        .def_static ("hours", &RelativeTime::hours)
+        .def_static ("days", &RelativeTime::days)
+        .def_static ("weeks", &RelativeTime::weeks)
+        .def ("inMilliseconds", &RelativeTime::inMilliseconds)
+        .def ("inSeconds", &RelativeTime::inSeconds)
+        .def ("inMinutes", &RelativeTime::inMinutes)
+        .def ("inHours", &RelativeTime::inHours)
+        .def ("inDays", &RelativeTime::inDays)
+        .def ("inWeeks", &RelativeTime::inWeeks)
+        .def ("getDescription", &RelativeTime::getDescription)
+        .def ("getApproximateDescription", &RelativeTime::getApproximateDescription)
+        .def (py::self += py::self)
+        .def (py::self -= py::self)
+        .def (py::self += double())
+        .def (py::self -= double())
+    //.def (py::self = RelativeTime())
+    ;
+
+    // ============================================================================================ juce::Time
+
+    py::class_<Time> classTime (m, "Time");
+    classTime
+    //.def (py::self = Time())
+        .def_static ("getCurrentTime", &Time::getCurrentTime)
+        .def ("toMilliseconds", &Time::toMilliseconds)
+        .def ("getYear", &Time::getYear)
+        .def ("getMonth", &Time::getMonth)
+        .def ("getMonthName", py::overload_cast<bool>(&Time::getMonthName, py::const_))
+        .def_static ("getMonthName", static_cast<String (*)(int, bool)>(&Time::getMonthName))
+        .def ("getDayOfMonth", &Time::getDayOfMonth)
+        .def ("getDayOfWeek", &Time::getDayOfWeek)
+        .def ("getDayOfYear", &Time::getDayOfYear)
+        .def ("getWeekdayName", py::overload_cast<bool>(&Time::getWeekdayName, py::const_))
+        .def_static ("getWeekdayName", static_cast<String (*)(int, bool)>(&Time::getWeekdayName))
+        .def ("getHours", &Time::getHours)
+        .def ("isAfternoon", &Time::isAfternoon)
+        .def ("getHoursInAmPmFormat", &Time::getHoursInAmPmFormat)
+        .def ("getMinutes", &Time::getMinutes)
+        .def ("getSeconds", &Time::getSeconds)
+        .def ("getMilliseconds", &Time::getMilliseconds)
+        .def ("isDaylightSavingTime", &Time::isDaylightSavingTime)
+        .def ("getTimeZone", &Time::getTimeZone)
+        .def ("getUTCOffsetSeconds", &Time::getUTCOffsetSeconds)
+        .def ("getUTCOffsetString", &Time::getUTCOffsetString)
+        .def ("toString", &Time::toString)
+        .def ("formatted", &Time::formatted)
+        .def ("toISO8601", &Time::toISO8601)
+        .def_static ("fromISO8601", &Time::fromISO8601)
+        .def (py::self += RelativeTime())
+        .def (py::self -= RelativeTime())
+        .def ("setSystemTimeToThisTime", &Time::setSystemTimeToThisTime)
+        .def_static ("currentTimeMillis", &Time::currentTimeMillis)
+        .def_static ("getMillisecondCounter", &Time::getMillisecondCounter)
+        .def_static ("getMillisecondCounterHiRes", &Time::getMillisecondCounterHiRes)
+        .def_static ("waitForMillisecondCounter", &Time::waitForMillisecondCounter)
+        .def_static ("getApproximateMillisecondCounter", &Time::getApproximateMillisecondCounter)
+        .def_static ("getHighResolutionTicks", &Time::getHighResolutionTicks)
+        .def_static ("getHighResolutionTicksPerSecond", &Time::getHighResolutionTicksPerSecond)
+        .def_static ("highResolutionTicksToSeconds", &Time::highResolutionTicksToSeconds)
+        .def_static ("secondsToHighResolutionTicks", &Time::secondsToHighResolutionTicks)
+        .def_static ("getCompilationDate", &Time::getCompilationDate)
+    ;
+
     // ============================================================================================ juce::MemoryBlock
-    
+
     py::class_<MemoryBlock> classMemoryBlock (m, "MemoryBlock");
     classMemoryBlock
         .def (py::init<>())
@@ -339,6 +467,143 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getBitRange", &MemoryBlock::getBitRange)
         .def ("toBase64Encoding", &MemoryBlock::toBase64Encoding)
         .def ("fromBase64Encoding", &MemoryBlock::fromBase64Encoding)
+    ;
+
+    // ============================================================================================ juce::InputStream
+
+    py::class_<InputStream> classInputStream (m, "InputStream");
+    classInputStream
+        .def ("getTotalLength", &InputStream::getTotalLength)
+        .def ("getNumBytesRemaining", &InputStream::getNumBytesRemaining)
+        .def ("isExhausted", &InputStream::isExhausted)
+    //.def ("read", py::overload_cast<void *, int>(&InputStream::read))
+    //.def ("read", py::overload_cast<void *, int>(&InputStream::read))
+        .def ("readByte", &InputStream::readByte)
+        .def ("readBool", &InputStream::readBool)
+        .def ("readShort", &InputStream::readShort)
+        .def ("readShortBigEndian", &InputStream::readShortBigEndian)
+        .def ("readInt", &InputStream::readInt)
+        .def ("readIntBigEndian", &InputStream::readIntBigEndian)
+        .def ("readInt64", &InputStream::readInt64)
+        .def ("readInt64BigEndian", &InputStream::readInt64BigEndian)
+        .def ("readFloat", &InputStream::readFloat)
+        .def ("readFloatBigEndian", &InputStream::readFloatBigEndian)
+        .def ("readDouble", &InputStream::readDouble)
+        .def ("readDoubleBigEndian", &InputStream::readDoubleBigEndian)
+        .def ("readCompressedInt", &InputStream::readCompressedInt)
+        .def ("readNextLine", &InputStream::readNextLine)
+        .def ("readString", &InputStream::readString)
+        .def ("readEntireStreamAsString", &InputStream::readEntireStreamAsString)
+        .def ("readIntoMemoryBlock", &InputStream::readIntoMemoryBlock)
+        .def ("getPosition", &InputStream::getPosition)
+        .def ("setPosition", &InputStream::setPosition)
+        .def ("skipNextBytes", &InputStream::skipNextBytes)
+    ;
+
+    py::class_<BufferedInputStream, InputStream> classBufferedInputStream (m, "BufferedInputStream");
+    classBufferedInputStream
+        .def ("peekByte", &BufferedInputStream::peekByte)
+        .def ("getTotalLength", &BufferedInputStream::getTotalLength)
+        .def ("getPosition", &BufferedInputStream::getPosition)
+        .def ("setPosition", &BufferedInputStream::setPosition)
+        .def ("read", &BufferedInputStream::read)
+        .def ("readString", &BufferedInputStream::readString)
+        .def ("isExhausted", &BufferedInputStream::isExhausted)
+    ;
+
+    py::class_<MemoryInputStream, InputStream> classMemoryInputStream (m, "MemoryInputStream");
+    classMemoryInputStream
+        .def ("getData", &MemoryInputStream::getData)
+        .def ("getDataSize", &MemoryInputStream::getDataSize)
+        .def ("getPosition", &MemoryInputStream::getPosition)
+        .def ("setPosition", &MemoryInputStream::setPosition)
+        .def ("getTotalLength", &MemoryInputStream::getTotalLength)
+        .def ("isExhausted", &MemoryInputStream::isExhausted)
+        .def ("read", &MemoryInputStream::read)
+        .def ("skipNextBytes", &MemoryInputStream::skipNextBytes)
+    ;
+
+    py::class_<SubregionStream, InputStream> classSubregionStream (m, "SubregionStream");
+    classSubregionStream
+        .def ("getTotalLength", &SubregionStream::getTotalLength)
+        .def ("getPosition", &SubregionStream::getPosition)
+        .def ("setPosition", &SubregionStream::setPosition)
+        .def ("read", &SubregionStream::read)
+        .def ("isExhausted", &SubregionStream::isExhausted)
+    ;
+
+    py::class_<FileInputStream, InputStream> classFileInputStream (m, "FileInputStream");
+    classFileInputStream
+        .def ("getFile", &FileInputStream::getFile)
+        .def ("getStatus", &FileInputStream::getStatus)
+        .def ("failedToOpen", &FileInputStream::failedToOpen)
+        .def ("openedOk", &FileInputStream::openedOk)
+        .def ("getTotalLength", &FileInputStream::getTotalLength)
+        .def ("read", &FileInputStream::read)
+        .def ("isExhausted", &FileInputStream::isExhausted)
+        .def ("getPosition", &FileInputStream::getPosition)
+        .def ("setPosition", &FileInputStream::setPosition)
+    ;
+
+    // ============================================================================================ juce::OutputStream
+
+    py::class_<OutputStream> classOutputStream (m, "OutputStream");
+    classOutputStream
+        .def ("flush", &OutputStream::flush)
+        .def ("setPosition", &OutputStream::setPosition)
+        .def ("getPosition", &OutputStream::getPosition)
+        .def ("write", &OutputStream::write)
+        .def ("writeByte", &OutputStream::writeByte)
+        .def ("writeBool", &OutputStream::writeBool)
+        .def ("writeShort", &OutputStream::writeShort)
+        .def ("writeShortBigEndian", &OutputStream::writeShortBigEndian)
+        .def ("writeInt", &OutputStream::writeInt)
+        .def ("writeIntBigEndian", &OutputStream::writeIntBigEndian)
+        .def ("writeInt64", &OutputStream::writeInt64)
+        .def ("writeInt64BigEndian", &OutputStream::writeInt64BigEndian)
+        .def ("writeFloat", &OutputStream::writeFloat)
+        .def ("writeFloatBigEndian", &OutputStream::writeFloatBigEndian)
+        .def ("writeDouble", &OutputStream::writeDouble)
+        .def ("writeDoubleBigEndian", &OutputStream::writeDoubleBigEndian)
+        .def ("writeRepeatedByte", &OutputStream::writeRepeatedByte)
+        .def ("writeCompressedInt", &OutputStream::writeCompressedInt)
+        .def ("writeString", &OutputStream::writeString)
+        .def ("writeText", &OutputStream::writeText)
+        .def ("writeFromInputStream", &OutputStream::writeFromInputStream)
+        .def ("setNewLineString", &OutputStream::setNewLineString)
+        .def ("getNewLineString", &OutputStream::getNewLineString)
+    ;
+
+    py::class_<MemoryOutputStream, OutputStream> classMemoryOutputStream (m, "MemoryOutputStream");
+    classMemoryOutputStream
+        .def ("getData", &MemoryOutputStream::getData)
+        .def ("getDataSize", &MemoryOutputStream::getDataSize)
+        .def ("reset", &MemoryOutputStream::reset)
+        .def ("preallocate", &MemoryOutputStream::preallocate)
+        .def ("appendUTF8Char", &MemoryOutputStream::appendUTF8Char)
+        .def ("toUTF8", &MemoryOutputStream::toUTF8)
+        .def ("toString", &MemoryOutputStream::toString)
+        .def ("getMemoryBlock", &MemoryOutputStream::getMemoryBlock)
+        .def ("flush", &MemoryOutputStream::flush)
+        .def ("write", &MemoryOutputStream::write)
+        .def ("getPosition", &MemoryOutputStream::getPosition)
+        .def ("setPosition", &MemoryOutputStream::setPosition)
+        .def ("writeFromInputStream", &MemoryOutputStream::writeFromInputStream)
+        .def ("writeRepeatedByte", &MemoryOutputStream::writeRepeatedByte)
+    ;
+
+    py::class_<FileOutputStream, OutputStream> classFileOutputStream (m, "FileOutputStream");
+    classFileOutputStream
+        .def ("getFile", &FileOutputStream::getFile)
+        .def ("getStatus", &FileOutputStream::getStatus)
+        .def ("failedToOpen", &FileOutputStream::failedToOpen)
+        .def ("openedOk", &FileOutputStream::openedOk)
+        .def ("truncate", &FileOutputStream::truncate)
+        .def ("flush", &FileOutputStream::flush)
+        .def ("getPosition", &FileOutputStream::getPosition)
+        .def ("setPosition", &FileOutputStream::setPosition)
+        .def ("write", &FileOutputStream::write)
+        .def ("writeRepeatedByte", &FileOutputStream::writeRepeatedByte)
     ;
 
     // ============================================================================================ juce::CriticalSection
@@ -427,7 +692,32 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("waitForProcessToFinish", &ChildProcess::waitForProcessToFinish)
         .def ("getExitCode", &ChildProcess::getExitCode)
         .def ("kill", &ChildProcess::kill)
-    ; 
+    ;
+
+    // ============================================================================================ juce::PropertySet
+
+    py::class_<PropertySet> classPropertySet (m, "PropertySet");
+    classPropertySet
+        .def (py::init<>())
+        .def (py::init<const PropertySet&>())
+        .def ("getValue", &PropertySet::getValue)
+        .def ("getIntValue", &PropertySet::getIntValue)
+        .def ("getDoubleValue", &PropertySet::getDoubleValue)
+        .def ("getBoolValue", &PropertySet::getBoolValue)
+        .def ("getXmlValue", &PropertySet::getXmlValue)
+        .def ("setValue", py::overload_cast<StringRef, const var &>(&PropertySet::setValue))
+        //.def ("setValue", py::overload_cast<StringRef, const XmlElement *>(&PropertySet::setValue))
+        .def ("addAllPropertiesFrom", &PropertySet::addAllPropertiesFrom)
+        .def ("removeValue", &PropertySet::removeValue)
+        .def ("containsKey", &PropertySet::containsKey)
+        .def ("clear", &PropertySet::clear)
+        .def ("getAllProperties", &PropertySet::getAllProperties)
+        .def ("getLock", &PropertySet::getLock)
+        //.def ("createXml", &PropertySet::createXml)
+        //.def ("restoreFromXml", &PropertySet::restoreFromXml)
+        .def ("setFallbackPropertySet", &PropertySet::setFallbackPropertySet)
+        .def ("getFallbackPropertySet", &PropertySet::getFallbackPropertySet)
+    ;
 
     // ============================================================================================ juce::File
 
@@ -555,7 +845,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .export_values();
 
     // ============================================================================================ juce::URL
-    
+
     py::class_<URL> classURL (m, "URL");
     classURL
         .def (py::init<>())
@@ -632,20 +922,20 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("hadError", &URL::DownloadTask::hadError)
         .def ("getTargetLocation", &URL::DownloadTask::getTargetLocation)
     ;
-    
+
     struct PyURLDownloadTaskListener : public URL::DownloadTaskListener
     {
         void finished (URL::DownloadTask* task, bool success) override
         {
             PYBIND11_OVERRIDE_PURE(void, URL::DownloadTaskListener, finished, task, success);
         }
-        
+
         void progress (URL::DownloadTask* task, int64 bytesDownloaded, int64 totalLength) override
         {
             PYBIND11_OVERRIDE_PURE(void, URL::DownloadTaskListener, progress, task, bytesDownloaded, totalLength);
         }
     };
-    
+
     py::class_<URL::DownloadTaskListener, PyURLDownloadTaskListener> classURLDownloadTaskListener (classURL, "DownloadTaskListener");
     classURLDownloadTaskListener
         .def ("finished", &URL::DownloadTaskListener::finished)
@@ -671,9 +961,9 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
                        [](const URL::DownloadTaskOptions& self) { return self.usePost; },
                        [](URL::DownloadTaskOptions& self, bool v) { self.usePost = v; })
     ;
-    
+
     // ============================================================================================ juce::SystemStats
-    
+
     py::class_<SystemStats> classSystemStats (m, "SystemStats");
     classSystemStats
         .def_static ("getJUCEVersion", &SystemStats::getJUCEVersion)
