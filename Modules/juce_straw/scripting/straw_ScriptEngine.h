@@ -32,7 +32,7 @@ public:
      *
      * @warning Ensure that the provided modules are available and compatible with the Python interpreter.
      */
-    ScriptEngine(juce::Array<juce::String> modules);
+    ScriptEngine (juce::Array<juce::String> modules);
 
     /**
      * @brief Destroy the ScriptEngine object
@@ -42,7 +42,7 @@ public:
     ~ScriptEngine();
 
     /**
-     * @brief Run a Python script
+     * @brief Run a Python script.
      *
      * Executes the given Python code within the Python interpreter.
      *
@@ -51,11 +51,25 @@ public:
      * @return A Result object indicating the success or failure of the script execution.
      */
     juce::Result runScript (const juce::String& code);
-        
+
+    /**
+     * @brief Run a Python script file.
+     *
+     * Executes the given Python file within the Python interpreter.
+     *
+     * @param script The Python file to be executed.
+     *
+     * @return A Result object indicating the success or failure of the script execution.
+     */
+    juce::Result runScript (const juce::File& script);
+
 private:
+    juce::Result runScriptInternal (const juce::String& code);
+    
     pybind11::scoped_interpreter& pythonEngine;
     juce::Array<juce::String> customModules;
-    juce::String currentScript;
+    juce::String currentScriptCode;
+    juce::File currentScriptFile;
 
     JUCE_DECLARE_WEAK_REFERENCEABLE (ScriptEngine)
 };

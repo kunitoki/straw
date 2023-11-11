@@ -91,7 +91,7 @@ void clearComponentTypes();
  * @return A pointer to the derived type if the cast is successful, or nullptr otherwise.
  */
 template <class T>
-const void* ComponentType(const juce::Component* src, const std::type_info*& type)
+const void* ComponentType (const juce::Component* src, const std::type_info*& type)
 {
     static_assert (std::is_base_of_v<juce::Component, T>, "Invalid unrelated polymorphism between classes");
 

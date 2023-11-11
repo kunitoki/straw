@@ -18,9 +18,11 @@ namespace py = pybind11;
 
 namespace {
 
-juce::String replaceBrokenLineNumbers (const juce::String& input)
+[[maybe_unused]] juce::String replaceBrokenLineNumbers (const juce::String& input, const juce::String& code)
 {
     static const std::regex pattern ("<string>\\((\\d+)\\)");
+    
+    const auto codeLines = juce::StringArray::fromLines (code); 
     
     juce::String output;
     std::string result = input.toStdString();
@@ -31,9 +33,11 @@ juce::String replaceBrokenLineNumbers (const juce::String& input)
     {
         if (match.size() > 1)
         {
+            const int matchLine = std::stoi (match[1]) - 1;
+            
             output
-            << input.substring (static_cast<int> (startPos), static_cast<int> (match.position() - startPos))
-            << "<string>(" << (std::stoi (match[1]) - 1) << ")";
+                << input.substring (static_cast<int> (startPos), static_cast<int> (match.position() - startPos))
+                << "<string>(" << matchLine << "): \'" << codeLines[matchLine - 1] << "\'";
             
             startPos = match.position() + match.length();
         }
@@ -57,11 +61,11 @@ inline py::scoped_interpreter& getMainPythonEngine()
 
 //=================================================================================================
 
-ScriptEngine::ScriptEngine(juce::Array<juce::String> modules)
+ScriptEngine::ScriptEngine (juce::Array<juce::String> modules)
     : pythonEngine (getMainPythonEngine())
     , customModules (std::move (modules))
 {
-    customModules.addIfNotAlreadyThere("straw");
+    customModules.addIfNotAlreadyThere ("straw");
     
     py::set_shared_data ("_ENGINE", this);
 }
@@ -74,8 +78,32 @@ ScriptEngine::~ScriptEngine()
 
 juce::Result ScriptEngine::runScript (const juce::String& code)
 {
-    currentScript = code;
+    currentScriptCode = code;
+    currentScriptFile = juce::File();
 
+    return runScriptInternal (currentScriptCode);
+}
+
+//=================================================================================================
+
+juce::Result ScriptEngine::runScript (const juce::File& script)
+{
+    {
+        auto is = script.createInputStream();
+        if (is == nullptr)
+            return juce::Result::fail ("Unable to open the requested script file");
+
+        currentScriptCode = is->readEntireStreamAsString();
+        currentScriptFile = script;
+    }
+
+    return runScriptInternal (currentScriptCode);
+}
+
+//=================================================================================================
+
+juce::Result ScriptEngine::runScriptInternal (const juce::String& code)
+{
 #if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     try
 #endif
@@ -97,7 +125,7 @@ juce::Result ScriptEngine::runScript (const juce::String& code)
 #if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
     catch (const py::error_already_set& e)
     {
-        return juce::Result::fail (replaceBrokenLineNumbers (e.what()));
+        return juce::Result::fail (replaceBrokenLineNumbers (e.what(), code));
     }
     catch (...)
     {

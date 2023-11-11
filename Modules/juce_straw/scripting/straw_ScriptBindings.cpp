@@ -56,7 +56,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
 
     py::module_::import ("juce");
 
-    py::register_exception<ScriptException>(m, "ScriptException");
+    py::register_exception<ScriptException> (m, "ScriptException");
 
     m.def("findComponentById", [](py::args args) -> Component*
     {
@@ -138,7 +138,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
             for (std::size_t i = 2; i < args.size(); ++i)
                 arguments.add (args [i].cast<var>());
 
-            return Helpers::invokeComponentCustomMethod(component, methodName, arguments, [](StringRef exception)
+            return Helpers::invokeComponentCustomMethod (component, methodName, arguments, [](StringRef exception)
             {
                 throw ScriptException (exception);
             });
@@ -147,12 +147,17 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return juce::var();
     });
 
+    m.def("assertAlways", []([[maybe_unused]] py::args args)
+    {
+        throw ScriptException ("Failing always");
+    });
+
     m.def("assertTrue", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Invalid number of arguments when calling assertTrue");
 
-        if (! py::object (args[0]))
+        if (py::object (args[0]).is (py::bool_ (false)))
             throw ScriptException ("Parameter does not evaluate to true");
 
         return true;
@@ -163,7 +168,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         if (args.size() != 1)
             throw ScriptException ("Invalid number of arguments when calling assertFalse");
 
-        if (py::object (args[0]))
+        if (py::object (args[0]).is (py::bool_ (true)))
             throw ScriptException ("Parameter does not evaluate to false");
 
         return true;
