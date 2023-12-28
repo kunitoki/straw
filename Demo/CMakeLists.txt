@@ -85,8 +85,9 @@ target_link_libraries (${TARGET_NAME} PRIVATE
     juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
-    straw::juce_straw_recommended_warning_flags
-    straw::juce_straw
     Python::Python
+    straw::juce_python
+    straw::juce_straw
+    straw::juce_straw_recommended_warning_flags
     Melatonin::Inspector
     ${STRAW_LTO})

@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -13,11 +13,11 @@
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceCoreBindings (pybind11::module_& m);
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings
 
 //=================================================================================================
 
@@ -109,7 +109,7 @@ struct type_caster<juce::Array<T>>
 {
 public:
     PYBIND11_TYPE_CASTER (juce::Array<T>, const_name ("Array[]"));
-    
+
     bool load (handle src, bool convert)
     {
         if (! isinstance<list> (src))

@@ -6,36 +6,7 @@
 
 #include "../values/straw_VariantConverter.h"
 
-#if __clang__ || GNUC
-#include <cxxabi.h>
-#else
-#include <windows.h>
-#include <dbghelp.h>
-#pragma comment (lib, "dbghelp.lib")
-extern char* __unDName (char*, const char*, int, void*, void*, int);
-#endif
-
 namespace straw::Helpers {
-
-//=================================================================================================
-
-juce::String demangleClassName (juce::StringRef className)
-{
-    juce::String name = className;
-
-#if __clang__ || GNUC
-    int status = -1;
-    char* demangledName = abi::__cxa_demangle (name.toUTF8(), nullptr, nullptr, &status);
-    name = demangledName;
-    std::free (demangledName);
-#else
-    char demangledName [1024] = { 0 };
-    __unDName (demangledName, name.toUTF8() + 1, juce::numElementsInArray (demangledName), malloc, free, 0x2800);
-    name = demangledName;
-#endif
-
-    return name;
-}
 
 //=================================================================================================
 
@@ -77,13 +48,13 @@ juce::Component* findComponentById (juce::StringRef id)
 juce::Array<juce::Component*> findComponentsByType (juce::Component* component, juce::StringRef typeName)
 {
     juce::Array<juce::Component*> result;
-    
-    if (demangleClassName (typeid (*component).name()) == typeName)
+
+    if (jucepy::Helpers::demangleClassName (typeid (*component).name()) == typeName)
         result.addIfNotAlreadyThere (component);
 
     for (int i = 0; i < component->getNumChildComponents(); ++i)
     {
-        if (auto child = component->getChildComponent (i); demangleClassName (typeid (*child).name()) == typeName)
+        if (auto child = component->getChildComponent (i); jucepy::Helpers::demangleClassName (typeid (*child).name()) == typeName)
             result.addIfNotAlreadyThere (child);
     }
 
@@ -103,7 +74,7 @@ juce::Array<juce::Component*> findComponentsByType (juce::Component* component, 
 juce::Array<juce::Component*> findComponentsByType (juce::StringRef typeName)
 {
     juce::Array<juce::Component*> result;
-    
+
     for (int i = 0; i < juce::Desktop::getInstance().getNumComponents(); ++i)
     {
         for (const auto& foundComponent : findComponentsByType (juce::Desktop::getInstance().getComponent (i), typeName))
@@ -123,7 +94,7 @@ juce::var makeComponentInfo (juce::Component* component, bool recursive)
     {
         object->setProperty ("id", component->getComponentID());
         object->setProperty ("name", component->getName());
-        object->setProperty ("type", demangleClassName (typeid (*component).name()));
+        object->setProperty ("type", jucepy::Helpers::demangleClassName (typeid (*component).name()));
         object->setProperty ("visible", component->isVisible());
         object->setProperty ("showing", component->isShowing());
         object->setProperty ("enabled", component->isEnabled());
@@ -175,7 +146,7 @@ juce::Image renderComponentToImage (juce::Component* component, bool withChildre
     auto image = juce::Image (juce::Image::ARGB, component->getWidth(), component->getHeight(), true);
 
     juce::Graphics graphics (image);
-    
+
     if (withChildren)
         component->paintEntireComponent (graphics, true);
     else
@@ -193,10 +164,10 @@ void clickComponent (juce::Component* component,
 {
     jassert (component != nullptr);
     jassert (juce::MessageManager::getInstance()->isThisTheMessageThread());
-    
+
     auto mouseDownTime = juce::Time::getCurrentTime();
     auto mouseDownPos = component->getScreenBounds().getCentre().toFloat();
-    
+
     juce::MouseEvent ev1
     {
         juce::Desktop::getInstance().getMainMouseSource(),
@@ -215,15 +186,15 @@ void clickComponent (juce::Component* component,
         1,
         false
     };
-    
+
     component->mouseDown (ev1);
-    
+
     auto elapsedMouseDownTime = juce::Time::getCurrentTime() - mouseDownTime;
-    
+
     int clickTimeMilliseconds = juce::jmax(0, static_cast<int> (timeBetweenMouseDownAndUp.inMilliseconds() - elapsedMouseDownTime.inMilliseconds()));
     if (clickTimeMilliseconds > 0)
         juce::MessageManager::getInstance()->runDispatchLoopUntil(clickTimeMilliseconds);
-    
+
     juce::MouseEvent ev2
     {
         juce::Desktop::getInstance().getMainMouseSource(),
@@ -242,12 +213,12 @@ void clickComponent (juce::Component* component,
         1,
         false
     };
-    
+
     component->mouseUp (ev2);
-    
+
     if (finishCallback != nullptr)
         finishCallback();
-    
+
     juce::MessageManager::getInstance()->runDispatchLoopUntil(1);
 }
 
@@ -260,7 +231,7 @@ juce::var invokeComponentCustomMethod (juce::Component* component,
 {
     if (component == nullptr)
         return juce::var();
-    
+
     auto method = component->getProperties().getVarPointer (juce::String (methodName));
     if (method == nullptr)
         return errorCallback ? errorCallback("Method to invoke not found in object") : void(), juce::var();

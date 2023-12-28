@@ -4,8 +4,8 @@
 
 #include "straw_AutomationServer.h"
 
-#include "../scripting/straw_ScriptEngine.h"
-#include "../scripting/straw_ScriptBindings.h"
+//#include "../scripting/straw_ScriptEngine.h"
+//#include "../scripting/straw_ScriptBindings.h"
 #include "../endpoints/straw_ComponentEndpoints.h"
 #include "../helpers/straw_ComponentHelpers.h"
 
@@ -236,7 +236,7 @@ AutomationServer::AutomationServer()
 
 AutomationServer::~AutomationServer()
 {
-    Bindings::clearComponentTypes();
+    jucepy::Bindings::clearComponentTypes();
 
     stop();
 }
@@ -260,7 +260,7 @@ juce::Result AutomationServer::start (std::optional<int> port)
         int currentPort = definedPort, upperPort = juce::jmin(65535, definedPort + 1000);
         while (! socket.createListener (currentPort) && currentPort < upperPort)
             ++currentPort;
-        
+
         if (! socket.isConnected())
             return failedResult ("Unable to listen to ports in range ", definedPort, "-", upperPort);
     }
@@ -326,13 +326,13 @@ void AutomationServer::run()
 void AutomationServer::updateLocalRunFile()
 {
     jassert (localPort.has_value());
-    
+
     juce::String content;
-    
+
     content
         << "pid=" << currentProcessPid() << juce::newLine
         << "port=" << *localPort << juce::newLine;
-    
+
     getLocalRunFile().replaceWithText (content);
 }
 
@@ -412,10 +412,17 @@ void AutomationServer::handlePythonScriptRequest (Request request)
 {
     juce::MessageManager::callAsync([this, request = std::move (request)]
     {
-        ScriptEngine engine ([this]
+        jucepy::ScriptEngine engine ([this]
         {
-            auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
-            return modulesToImport;
+            juce::StringArray modules{ "straw" };
+
+            {
+                auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
+                modules.addArray (modulesToImport);
+            }
+
+            modules.removeDuplicates(false);
+            return modules;
         }());
 
         auto result = engine.runScript (request.contentData);
@@ -458,25 +465,25 @@ void AutomationServer::registerDefaultEndpoints()
 
 //=================================================================================================
 
-void AutomationServer::registerComponentType (juce::StringRef className, ComponentTypeCaster classCaster)
+void AutomationServer::registerComponentType (juce::StringRef className, jucepy::ComponentTypeCaster classCaster)
 {
-    Bindings::registerComponentType (className, std::move (classCaster));
+    jucepy::Bindings::registerComponentType (className, std::move (classCaster));
 }
 
 void AutomationServer::registerDefaultComponents()
 {
     // Buttons
-    Bindings::registerComponentType ("juce::Button", &ComponentType<juce::Button>);
-    Bindings::registerComponentType ("juce::ArrowButton", &ComponentType<juce::ArrowButton>);
-    Bindings::registerComponentType ("juce::DrawableButton", &ComponentType<juce::DrawableButton>);
-    Bindings::registerComponentType ("juce::HyperlinkButton", &ComponentType<juce::HyperlinkButton>);
-    Bindings::registerComponentType ("juce::ImageButton", &ComponentType<juce::ImageButton>);
-    Bindings::registerComponentType ("juce::ShapeButton", &ComponentType<juce::ShapeButton>);
-    Bindings::registerComponentType ("juce::TextButton", &ComponentType<juce::TextButton>);
-    Bindings::registerComponentType ("juce::ToggleButton", &ComponentType<juce::ToggleButton>);
+    jucepy::Bindings::registerComponentType ("juce::Button", &jucepy::ComponentType<juce::Button>);
+    jucepy::Bindings::registerComponentType ("juce::ArrowButton", &jucepy::ComponentType<juce::ArrowButton>);
+    jucepy::Bindings::registerComponentType ("juce::DrawableButton", &jucepy::ComponentType<juce::DrawableButton>);
+    jucepy::Bindings::registerComponentType ("juce::HyperlinkButton", &jucepy::ComponentType<juce::HyperlinkButton>);
+    jucepy::Bindings::registerComponentType ("juce::ImageButton", &jucepy::ComponentType<juce::ImageButton>);
+    jucepy::Bindings::registerComponentType ("juce::ShapeButton", &jucepy::ComponentType<juce::ShapeButton>);
+    jucepy::Bindings::registerComponentType ("juce::TextButton", &jucepy::ComponentType<juce::TextButton>);
+    jucepy::Bindings::registerComponentType ("juce::ToggleButton", &jucepy::ComponentType<juce::ToggleButton>);
 
     // Widgets
-    Bindings::registerComponentType ("juce::Slider", &ComponentType<juce::Slider>);
+    jucepy::Bindings::registerComponentType ("juce::Slider", &jucepy::ComponentType<juce::Slider>);
 }
 
 //=================================================================================================

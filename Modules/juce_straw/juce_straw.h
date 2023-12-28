@@ -6,7 +6,7 @@
  BEGIN_JUCE_MODULE_DECLARATION
 
   ID:                 juce_straw
-  vendor:             juce_straw
+  vendor:             kunitoki
   version:            0.0.1
   name:               Straws for the JUCE framework
   description:        The automated integration test framework for automating JUCE apps on CI.
@@ -14,7 +14,7 @@
   license:            DUAL
   minimumCppStandard: 17
 
-  dependencies:       juce_core juce_events juce_gui_basics
+  dependencies:       juce_core juce_events juce_gui_basics juce_python
 
  END_JUCE_MODULE_DECLARATION
 */
@@ -25,7 +25,3 @@
 #include "server/straw_AutomationServer.h"
 #include "helpers/straw_ComponentHelpers.h"
 #include "values/straw_VariantConverter.h"
-#include "scripting/straw_ScriptException.h"
-#include "scripting/straw_ScriptEngine.h"
-#include "scripting/straw_ScriptJuceBindings.h"
-#include "scripting/straw_ScriptBindings.h"

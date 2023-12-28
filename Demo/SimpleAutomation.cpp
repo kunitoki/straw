@@ -64,7 +64,7 @@ AutomationDemo::AutomationDemo()
     });
 
     automationServer.registerDefaultComponents();
-    automationServer.registerComponentType ("CustomSlider", &straw::ComponentType<CustomSlider>);
+    automationServer.registerComponentType ("CustomSlider", &jucepy::ComponentType<CustomSlider>);
     automationServer.registerCustomPythonModules ({ "custom" });
 
     auto result = automationServer.start (8001);

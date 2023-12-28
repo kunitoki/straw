@@ -1,16 +1,14 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptEngine.h"
-#include "straw_ScriptBindings.h"
-#include "straw_ScriptException.h"
+#include "ScriptEngine.h"
+#include "ScriptBindings.h"
+#include "ScriptException.h"
 
 #include <regex>
 
-#define STRAW_DEBUG_ENABLE_SCRIPT_CATCH 1
-
-namespace straw {
+namespace jucepy {
 
 namespace py = pybind11;
 
@@ -21,30 +19,30 @@ namespace {
 [[maybe_unused]] juce::String replaceBrokenLineNumbers (const juce::String& input, const juce::String& code)
 {
     static const std::regex pattern ("<string>\\((\\d+)\\)");
-    
-    const auto codeLines = juce::StringArray::fromLines (code); 
-    
+
+    const auto codeLines = juce::StringArray::fromLines (code);
+
     juce::String output;
     std::string result = input.toStdString();
     std::ptrdiff_t startPos = 0;
-    
+
     std::smatch match;
     while (std::regex_search (result, match, pattern))
     {
         if (match.size() > 1)
         {
             const int matchLine = std::stoi (match[1]) - 1;
-            
+
             output
                 << input.substring (static_cast<int> (startPos), static_cast<int> (match.position() - startPos))
                 << "<string>(" << matchLine << "): \'" << codeLines[matchLine - 1] << "\'";
-            
+
             startPos = match.position() + match.length();
         }
-        
+
         result = match.suffix();
     }
-    
+
     output << result;
     return output;
 }
@@ -61,17 +59,16 @@ inline py::scoped_interpreter& getMainPythonEngine()
 
 //=================================================================================================
 
-ScriptEngine::ScriptEngine (juce::Array<juce::String> modules)
+ScriptEngine::ScriptEngine (juce::StringArray modules)
     : pythonEngine (getMainPythonEngine())
     , customModules (std::move (modules))
 {
-    customModules.addIfNotAlreadyThere ("straw");
-    
     py::set_shared_data ("_ENGINE", this);
 }
 
 ScriptEngine::~ScriptEngine()
 {
+    py::set_shared_data ("_ENGINE", nullptr);
 }
 
 //=================================================================================================
@@ -104,7 +101,7 @@ juce::Result ScriptEngine::runScript (const juce::File& script)
 
 juce::Result ScriptEngine::runScriptInternal (const juce::String& code)
 {
-#if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
+#if JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION
     try
 #endif
 
@@ -122,7 +119,7 @@ juce::Result ScriptEngine::runScriptInternal (const juce::String& code)
         return juce::Result::ok();
     }
 
-#if STRAW_DEBUG_ENABLE_SCRIPT_CATCH
+#if JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION
     catch (const py::error_already_set& e)
     {
         return juce::Result::fail (replaceBrokenLineNumbers (e.what(), code));
@@ -134,4 +131,4 @@ juce::Result ScriptEngine::runScriptInternal (const juce::String& code)
 #endif
 }
 
-} // namespace straw
+} // namespace jucepy

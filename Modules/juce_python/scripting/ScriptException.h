@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -8,7 +8,7 @@
 
 #include <exception>
 
-namespace straw {
+namespace jucepy {
 
 //=================================================================================================
 
@@ -54,4 +54,4 @@ private:
     juce::String message;
 };
 
-} // namespace straw
+} // namespace jucepy

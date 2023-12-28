@@ -2,9 +2,7 @@
  * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptBindings.h"
-#include "straw_ScriptException.h"
-#include "straw_ScriptUtilities.h"
+#include <juce_python/juce_python.h>
 
 #include "../values/straw_VariantConverter.h"
 #include "../helpers/straw_ComponentHelpers.h"
@@ -12,38 +10,6 @@
 #include <functional>
 #include <string_view>
 #include <tuple>
-
-namespace straw {
-
-//=================================================================================================
-
-namespace Bindings {
-
-ComponentTypeMap& getComponentTypeMap()
-{
-    static ComponentTypeMap typeMap;
-    return typeMap;
-}
-
-void registerComponentType (juce::StringRef className, ComponentTypeCaster classCaster)
-{
-    auto& map = getComponentTypeMap();
-
-    auto lock = juce::CriticalSection::ScopedLockType (map.mutex);
-    map.typeMap [className] = std::move (classCaster);
-}
-
-void clearComponentTypes()
-{
-    auto& map = getComponentTypeMap();
-
-    auto lock = juce::CriticalSection::ScopedLockType (map.mutex);
-    map.typeMap.clear();
-}
-
-} // namespace Bindings
-
-} // namespace straw
 
 //=================================================================================================
 
@@ -58,7 +24,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
 
     py::register_exception<ScriptException> (m, "ScriptException");
 
-    m.def("findComponentById", [](py::args args) -> Component*
+    m.def ("findComponentById", [](py::args args) -> Component*
     {
         if (args.size() != 1)
             throw ScriptException ("Missing argument componentId when calling findComponentById");
@@ -73,20 +39,20 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return {};
     }, py::return_value_policy::reference);
 
-    m.def("findComponentsByType", [](py::args args)
+    m.def ("findComponentsByType", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Missing argument typeName when calling findComponentByType");
 
         auto components = Helpers::findComponentsByType (String (py::str (args [0])));
-        
+
         py::list list;
         for (const auto& comp : components)
             list.append (comp);
         return list;
     });
 
-    m.def("clickComponent", [](py::args args)
+    m.def ("clickComponent", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Missing argument componentId when calling clickComponent");
@@ -102,7 +68,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         }
     });
 
-    m.def("renderComponent", [](py::args args)
+    m.def ("renderComponent", [](py::args args)
     {
         if (args.size() == 0)
             throw ScriptException ("Missing argument componentId when calling renderComponent");
@@ -129,7 +95,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         auto component = python_cast<Component*> (args [0]).value_or (nullptr);
         if (component == nullptr)
             component = Helpers::findComponentById (String (py::str (args [0])));
-            
+
         if (component != nullptr)
         {
             auto methodName = String (py::str (args [1]));
@@ -147,12 +113,12 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return juce::var();
     });
 
-    m.def("assertAlways", []([[maybe_unused]] py::args args)
+    m.def ("assertAlways", []([[maybe_unused]] py::args args)
     {
         throw ScriptException ("Failing always");
     });
 
-    m.def("assertTrue", [](py::args args)
+    m.def ("assertTrue", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Invalid number of arguments when calling assertTrue");
@@ -163,7 +129,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertFalse", [](py::args args)
+    m.def ("assertFalse", [](py::args args)
     {
         if (args.size() != 1)
             throw ScriptException ("Invalid number of arguments when calling assertFalse");
@@ -174,7 +140,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertEqual", [](py::args args)
+    m.def ("assertEqual", [](py::args args)
     {
         if (args.size() != 2)
             throw ScriptException ("Invalid number of arguments when calling assertEqual");
@@ -185,7 +151,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertNotEqual", [](py::args args)
+    m.def ("assertNotEqual", [](py::args args)
     {
         if (args.size() != 2)
             throw straw::ScriptException ("Invalid number of arguments when calling assertNotEqual");
@@ -196,7 +162,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertLessThan", [](py::args args)
+    m.def ("assertLessThan", [](py::args args)
     {
         if (args.size() != 2)
             throw straw::ScriptException ("Invalid number of arguments when calling assertLessThan");
@@ -207,7 +173,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertLessThanEqual", [](py::args args)
+    m.def ("assertLessThanEqual", [](py::args args)
     {
         if (args.size() != 2)
             throw straw::ScriptException ("Invalid number of arguments when calling assertLessThanEqual");
@@ -218,7 +184,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertGreaterThan", [](py::args args)
+    m.def ("assertGreaterThan", [](py::args args)
     {
         if (args.size() != 2)
             throw straw::ScriptException ("Invalid number of arguments when calling assertGreaterThan");
@@ -229,7 +195,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("assertGreaterThanEqual", [](py::args args)
+    m.def ("assertGreaterThanEqual", [](py::args args)
     {
         if (args.size() != 2)
             throw straw::ScriptException ("Invalid number of arguments when calling assertGreaterThanEqual");
@@ -240,7 +206,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         return true;
     });
 
-    m.def("throwException", [](py::args args)
+    m.def ("throwException", [](py::args args)
     {
         String message;
         for (const auto& arg : args)
@@ -253,12 +219,12 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
         throw py::type_error (message.toRawUTF8());
     });
 
-    m.def("quitApplication", []
+    m.def ("quitApplication", []
     {
         juce::JUCEApplication::getInstance()->quit();
     });
 
-    m.def("log", [](py::args args)
+    m.def ("log", [](py::args args)
     {
         auto currentTime = Time::getCurrentTime();
 

@@ -1,12 +1,10 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptJuceGraphicsBindings.h"
-#include "../straw_ScriptBindings.h"
-#include "../straw_ScriptException.h"
+#include "ScriptJuceGraphicsBindings.h"
 
-#include "../../values/straw_VariantConverter.h"
+//#include "../../values/straw_VariantConverter.h"
 
 #include "../pybind11/operators.h"
 
@@ -16,18 +14,18 @@
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceGraphicsBindings (pybind11::module_& m)
 {
     using namespace juce;
-    
+
     namespace py = pybind11;
-    
+
     // ============================================================================================ juce::AffineTransform
-    
+
     py::class_<Justification> justificationClass (m, "Justification");
-    
+
     justificationClass
         .def (py::init<Justification::Flags>())
         .def (py::init<const Justification&>())
@@ -40,7 +38,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     //.def ("applyToRectangle", &Justification::applyToRectangle)
     //.def ("appliedToRectangle", &Justification::appliedToRectangle)
     ;
-    
+
     py::enum_<Justification::Flags> (justificationClass, "Flags")
         .value("left", Justification::Flags::left)
         .value("right", Justification::Flags::right)
@@ -59,9 +57,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .value("bottomLeft", Justification::Flags::bottomLeft)
         .value("bottomRight", Justification::Flags::bottomRight)
         .export_values();
-    
+
     // ============================================================================================ juce::AffineTransform
-    
+
     py::class_<AffineTransform> (m, "AffineTransform")
         .def (py::init<>())
     //.def (py::init<const AffineTransform&>())
@@ -114,9 +112,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
                       [](const AffineTransform& self) { return self.mat12; },
                       [](AffineTransform& self, float v) { self.mat12 = v; })
     ;
-    
+
     // ============================================================================================ juce::Point<>
-    
+
     py::class_<Point<int>> (m, "PointInt")
         .def (py::init<>())
     //.def (py::init<const Point<int>&>())
@@ -166,7 +164,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def_property("x", &Point<int>::getX, &Point<int>::setX)
         .def_property("y", &Point<int>::getY, &Point<int>::setY)
     ;
-    
+
     py::class_<Point<float>> (m, "PointFloat")
         .def (py::init<>())
     //.def (py::init<const Point<float>&>())
@@ -216,9 +214,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def_property("x", &Point<float>::getX, &Point<float>::setX)
         .def_property("y", &Point<float>::getY, &Point<float>::setY)
     ;
-    
+
     // ============================================================================================ juce::Rectangle<>
-    
+
     py::class_<Rectangle<int>> (m, "RectangleInt")
         .def ("isEmpty", &Rectangle<int>::isEmpty)
         .def ("isFinite", &Rectangle<int>::isFinite)
@@ -237,7 +235,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getBottomLeft", &Rectangle<int>::getBottomLeft)
         .def ("getBottomRight", &Rectangle<int>::getBottomRight)
     ;
-    
+
     py::class_<Rectangle<float>> (m, "RectangleFloat")
         .def ("isEmpty", &Rectangle<float>::isEmpty)
         .def ("isFinite", &Rectangle<float>::isFinite)
@@ -256,9 +254,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getBottomLeft", &Rectangle<float>::getBottomLeft)
         .def ("getBottomRight", &Rectangle<float>::getBottomRight)
     ;
-    
+
     // ============================================================================================ juce::Rectangle<>
-    
+
     py::class_<Line<float>> (m, "LineFloat")
         .def (py::init<>())
         .def ("getStartX", &Line<float>::getStartX)
@@ -298,11 +296,11 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("withLengthenedEnd", &Line<float>::withLengthenedEnd)
         .def ("withShortenedEnd", &Line<float>::withShortenedEnd)
     ;
-    
+
     // ============================================================================================ juce::Rectangle<>
-    
+
     py::class_<Path> pathClass (m, "Path");
-    
+
     pathClass
         .def (py::init<>())
         .def (py::self == py::self)
@@ -363,9 +361,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("toString", &Path::toString)
         .def ("restoreFromString", &Path::restoreFromString)
     ;
-    
+
     // ============================================================================================ juce::PixelARGB
-    
+
     py::class_<PixelARGB> (m, "PixelARGB")
         .def (py::init<>())
     //.def (py::init<uint8, uint8, uint8, uint8>())
@@ -390,7 +388,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("unpremultiply", &PixelARGB::unpremultiply)
         .def ("desaturate", &PixelARGB::desaturate)
     ;
-    
+
     py::class_<PixelRGB> (m, "PixelRGB")
         .def (py::init<>())
         .def ("getNativeARGB", &PixelRGB::getNativeARGB)
@@ -413,7 +411,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("unpremultiply", &PixelRGB::unpremultiply)
         .def ("desaturate", &PixelRGB::desaturate)
     ;
-    
+
     py::class_<PixelAlpha> (m, "PixelAlpha")
         .def (py::init<>())
         .def ("getNativeARGB", &PixelAlpha::getNativeARGB)
@@ -438,7 +436,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     ;
 
     // ============================================================================================ juce::Colour
-    
+
     py::class_<Colour> (m, "Colour")
         .def (py::init<>())
     //.def (py::init<uint32>())
@@ -498,9 +496,9 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def_static ("fromString", &Colour::fromString)
         .def ("toDisplayString", &Colour::toDisplayString)
     ;
-    
+
     // ============================================================================================ juce::Colour
-    
+
     py::class_<ColourGradient> (m, "ColourGradient")
         .def (py::init<>())
         .def_static ("vertical", [](Colour c1, float y1, Colour c2, float y2) { return ColourGradient::vertical(c1, y1, c2, y2); })
@@ -530,11 +528,11 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def (py::self == py::self)
         .def (py::self != py::self)
     ;
-    
+
     // ============================================================================================ juce::Image
-    
+
     py::class_<Image> imageClass (m, "Image");
-    
+
     imageClass
         .def (py::init<>())
     //.def (py::init<Image::PixelFormat, int, int, bool>())
@@ -569,16 +567,16 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getReferenceCount", &Image::getReferenceCount)
     //.def ("getPixelData", &Image::getPixelData)
     ;
-    
+
     py::enum_<Image::PixelFormat> (imageClass, "PixelFormat")
         .value("UnknownFormat", Image::PixelFormat::UnknownFormat)
         .value("RGB", Image::PixelFormat::RGB)
         .value("ARGB", Image::PixelFormat::ARGB)
         .value("SingleChannel", Image::PixelFormat::SingleChannel)
         .export_values();
-    
+
     // ============================================================================================ juce::FillType
-    
+
     py::class_<FillType> (m, "FillType")
         .def (py::init<>())
     //.def (py::init<Colour>())
@@ -614,4 +612,4 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     ;
 }
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings

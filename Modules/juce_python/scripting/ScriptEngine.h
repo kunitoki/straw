@@ -1,16 +1,16 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
 
 #include <juce_core/juce_core.h>
 
-#include "pybind11/embed.h"
+#include "../pybind11/embed.h"
 
 #include <functional>
 
-namespace straw {
+namespace jucepy {
 
 //=================================================================================================
 
@@ -32,7 +32,7 @@ public:
      *
      * @warning Ensure that the provided modules are available and compatible with the Python interpreter.
      */
-    ScriptEngine (juce::Array<juce::String> modules);
+    ScriptEngine (juce::StringArray modules);
 
     /**
      * @brief Destroy the ScriptEngine object
@@ -65,13 +65,13 @@ public:
 
 private:
     juce::Result runScriptInternal (const juce::String& code);
-    
+
     pybind11::scoped_interpreter& pythonEngine;
-    juce::Array<juce::String> customModules;
+    juce::StringArray customModules;
     juce::String currentScriptCode;
     juce::File currentScriptFile;
 
     JUCE_DECLARE_WEAK_REFERENCEABLE (ScriptEngine)
 };
 
-} // namespace straw
+} // namespace jucepy

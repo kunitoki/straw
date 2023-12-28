@@ -1,12 +1,10 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptJuceCoreBindings.h"
-#include "../straw_ScriptBindings.h"
-#include "../straw_ScriptException.h"
+#include "ScriptJuceCoreBindings.h"
 
-#include "../../values/straw_VariantConverter.h"
+//#include "../../values/straw_VariantConverter.h"
 
 #include "../pybind11/operators.h"
 
@@ -99,12 +97,15 @@ handle type_caster<juce::Identifier>::cast (const juce::Identifier& src, return_
 
 //=================================================================================================
 
-bool type_caster<juce::var>::load (handle src, bool)
+bool type_caster<juce::var>::load (handle src, bool convert)
 {
     PyObject* source = src.ptr();
-
     auto baseType = Py_TYPE (source)->tp_base;
-    if (baseType == &PyBool_Type)
+
+    if (PyNone_Check(source))
+        value = juce::var::undefined();
+
+    else if (baseType == &PyBool_Type)
         value = PyObject_IsTrue (source) ? true : false;
 
     else if (baseType == &PyLong_Type)
@@ -115,6 +116,38 @@ bool type_caster<juce::var>::load (handle src, bool)
 
     else if (baseType == &PyUnicode_Type)
         value = juce::String::fromUTF8 (PyUnicode_AsUTF8 (source));
+
+    else if (baseType == &PyTuple_Type)
+    {
+        value = juce::var();
+
+        const auto tupleSize = PyTuple_Size(source);
+        for (Py_ssize_t i = 0; i < tupleSize; ++i)
+        {
+            make_caster<juce::var> conv;
+
+            if (! conv.load (PyTuple_GetItem(source, i), convert))
+                return false;
+
+            value.append (cast_op<juce::var&&> (std::move (conv)));
+        }
+    }
+
+    else if (baseType == &PyList_Type)
+    {
+        value = juce::var();
+
+        const auto tupleSize = PyList_Size(source);
+        for (Py_ssize_t i = 0; i < tupleSize; ++i)
+        {
+            make_caster<juce::var> conv;
+
+            if (! conv.load (PyList_GetItem(source, i), convert))
+                return false;
+
+            value.append (cast_op<juce::var&&> (std::move (conv)));
+        }
+    }
 
     else
         value = juce::var::undefined();
@@ -275,7 +308,7 @@ handle type_caster<juce::NamedValueSet>::cast (const juce::NamedValueSet& src, r
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 {
@@ -368,7 +401,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
     py::class_<RelativeTime> classRelativeTime (m, "RelativeTime");
     classRelativeTime
         .def (py::init<>())
-        //.def_static ("milliseconds", static_cast<RelativeTime (*)(int)>(&RelativeTime::milliseconds))
+    //.def_static ("milliseconds", static_cast<RelativeTime (*)(int)>(&RelativeTime::milliseconds))
         .def_static ("milliseconds", static_cast<RelativeTime (*)(int64)>(&RelativeTime::milliseconds))
         .def_static ("seconds", &RelativeTime::seconds)
         .def_static ("minutes", &RelativeTime::minutes)
@@ -400,12 +433,12 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getYear", &Time::getYear)
         .def ("getMonth", &Time::getMonth)
         .def ("getMonthName", py::overload_cast<bool>(&Time::getMonthName, py::const_))
-        //.def_static ("getMonthName", static_cast<String (*)(int, bool)>(&Time::getMonthName))
+    //.def_static ("getMonthName", static_cast<String (*)(int, bool)>(&Time::getMonthName))
         .def ("getDayOfMonth", &Time::getDayOfMonth)
         .def ("getDayOfWeek", &Time::getDayOfWeek)
         .def ("getDayOfYear", &Time::getDayOfYear)
         .def ("getWeekdayName", py::overload_cast<bool>(&Time::getWeekdayName, py::const_))
-        //.def_static ("getWeekdayName", static_cast<String (*)(int, bool)>(&Time::getWeekdayName))
+    //.def_static ("getWeekdayName", static_cast<String (*)(int, bool)>(&Time::getWeekdayName))
         .def ("getHours", &Time::getHours)
         .def ("isAfternoon", &Time::isAfternoon)
         .def ("getHoursInAmPmFormat", &Time::getHoursInAmPmFormat)
@@ -1053,4 +1086,4 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .export_values();
 }
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings

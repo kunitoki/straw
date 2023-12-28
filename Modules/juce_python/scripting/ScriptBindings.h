@@ -1,17 +1,18 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "pybind11/embed.h"
+#include "../pybind11/embed.h"
 
 #include <functional>
 #include <typeinfo>
+#include <unordered_map>
 
-namespace straw {
+namespace jucepy {
 
 //=================================================================================================
 
@@ -46,7 +47,7 @@ namespace Bindings {
 struct ComponentTypeMap
 {
     juce::CriticalSection mutex;
-    std::unordered_map<juce::String, straw::ComponentTypeCaster> typeMap;
+    std::unordered_map<juce::String, ComponentTypeCaster> typeMap;
 };
 
 /**
@@ -100,8 +101,8 @@ const void* ComponentType (const juce::Component* src, const std::type_info*& ty
         type = &typeid(T);
         return result;
     }
-    
+
     return nullptr;
 }
 
-} // namespace straw
+} // namespace jucepy

@@ -1,14 +1,14 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
 
-#include "pybind11/embed.h"
+#include "../pybind11/embed.h"
 
 #include <optional>
 
-namespace straw {
+namespace jucepy {
 
 /**
  * @brief
@@ -26,4 +26,4 @@ std::optional<T> python_cast (const pybind11::object& value)
     }
 }
 
-} // namespace straw
+} // namespace jucepy

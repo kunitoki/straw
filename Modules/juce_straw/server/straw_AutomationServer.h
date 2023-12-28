@@ -6,10 +6,11 @@
 
 #include <juce_core/juce_core.h>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_python/juce_python.h>
 
 #include "straw_Request.h"
-#include "../scripting/straw_ScriptEngine.h"
-#include "../scripting/straw_ScriptBindings.h"
+//#include "../scripting/straw_ScriptEngine.h"
+//#include "../scripting/straw_ScriptBindings.h"
 
 #include <functional>
 #include <initializer_list>
@@ -159,7 +160,7 @@ public:
      * @param className The name of the component class.
      * @param classCaster The casting function for the component class.
      */
-    void registerComponentType (juce::StringRef className, ComponentTypeCaster classCaster);
+    void registerComponentType (juce::StringRef className, jucepy::ComponentTypeCaster classCaster);
 
     /**
      * @brief Registers default component types and their casters.
@@ -167,7 +168,7 @@ public:
      * This function registers default component types and their associated casting functions. Clients can use these to handle common component types.
      */
     void registerDefaultComponents();
-    
+
     /**
      * @brief Registers custom Python modules for scripting.
      *
@@ -182,7 +183,7 @@ private:
 
     juce::File getLocalRunFile() const;
     void updateLocalRunFile();
-    
+
     void handleConnection (std::shared_ptr<juce::StreamingSocket> connection);
     void handleApplicationJsonRequest (Request request);
     void handlePythonScriptRequest (Request request);
@@ -192,7 +193,7 @@ private:
 
     juce::CriticalSection callbacksLock;
     std::unordered_map<juce::String, EndpointCallback> callbacks;
-    juce::Array<juce::String> modulesToImport;
+    juce::StringArray modulesToImport;
 
     std::optional<int> localPort;
 

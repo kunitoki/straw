@@ -1,13 +1,10 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptJuceGuiBasicsBindings.h"
-#include "../straw_ScriptBindings.h"
-#include "../straw_ScriptException.h"
+#include "ScriptJuceGuiBasicsBindings.h"
 
-#include "../../values/straw_VariantConverter.h"
-#include "../../helpers/straw_ComponentHelpers.h"
+//#include "../../values/straw_VariantConverter.h"
 
 #include "../pybind11/operators.h"
 
@@ -28,8 +25,8 @@ struct polymorphic_type_hook<juce::Component>
         if (src == nullptr)
             return src;
 
-        auto& map = straw::Bindings::getComponentTypeMap();
-        auto demangledName = straw::Helpers::demangleClassName (typeid(*src).name());
+        auto& map = jucepy::Bindings::getComponentTypeMap();
+        auto demangledName = jucepy::Helpers::demangleClassName (typeid(*src).name());
 
         auto it = map.typeMap.find (demangledName);
         if (it != map.typeMap.end())
@@ -43,7 +40,7 @@ struct polymorphic_type_hook<juce::Component>
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceGuiBasicsBindings (pybind11::module_& m)
 {
@@ -234,4 +231,4 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     ;
 }
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings

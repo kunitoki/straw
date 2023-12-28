@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -10,8 +10,8 @@
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceGuiBasicsBindings (pybind11::module_& m);
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings

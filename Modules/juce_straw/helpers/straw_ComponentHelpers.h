@@ -13,19 +13,6 @@ namespace straw::Helpers {
 //=================================================================================================
 
 /**
- * @brief Demangle a C++ class name.
- *
- * This function takes a StringRef containing a mangled class name and returns the demangled class name as a String.
- *
- * @param className The mangled class name to demangle.
- *
- * @return A String containing the demangled class name.
- */
-juce::String demangleClassName (juce::StringRef className);
-
-//=================================================================================================
-
-/**
  * @brief Find a component by its ID within a given component and its children.
  *
  * This function searches for a component with the specified ID within the hierarchy of the provided component and its child components.

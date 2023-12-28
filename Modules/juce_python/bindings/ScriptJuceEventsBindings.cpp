@@ -1,14 +1,11 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
-#include "straw_ScriptJuceGuiBasicsBindings.h"
-#include "straw_ScriptJuceEventsBindings.h"
-#include "../straw_ScriptBindings.h"
-#include "../straw_ScriptException.h"
+#include "ScriptJuceGuiBasicsBindings.h"
+#include "ScriptJuceEventsBindings.h"
 
-#include "../../values/straw_VariantConverter.h"
-#include "../../helpers/straw_ComponentHelpers.h"
+//#include "../../values/straw_VariantConverter.h"
 
 #include "../pybind11/operators.h"
 #include "../pybind11/functional.h"
@@ -20,7 +17,7 @@
 
 //=================================================================================================
 
-namespace straw::Bindings {
+namespace jucepy::Bindings {
 
 void registerJuceEventsBindings (pybind11::module_& m)
 {
@@ -29,7 +26,7 @@ void registerJuceEventsBindings (pybind11::module_& m)
     namespace py = pybind11;
 
     // ============================================================================================ juce::JUCEApplicationBase
-    
+
     py::class_<JUCEApplicationBase> classJUCEApplicationBase (m, "JUCEApplicationBase");
     classJUCEApplicationBase
         .def ("getApplicationName", &JUCEApplicationBase::getApplicationName)
@@ -43,9 +40,9 @@ void registerJuceEventsBindings (pybind11::module_& m)
         .def_static ("isStandaloneApp", &JUCEApplicationBase::isStandaloneApp)
         .def ("isInitialising", &JUCEApplicationBase::isInitialising)
     ;
-    
+
     // ============================================================================================ juce::ActionListener
-    
+
     struct PyActionListener : public ActionListener
     {
         void actionListenerCallback(const String& message) override
@@ -53,15 +50,15 @@ void registerJuceEventsBindings (pybind11::module_& m)
             PYBIND11_OVERRIDE_PURE(void, ActionListener, actionListenerCallback, message);
         }
     };
-    
+
     py::class_<ActionListener, PyActionListener> classActionListener (m, "ActionListener");
     classActionListener
         .def (py::init<>())
         .def ("actionListenerCallback", &ActionListener::actionListenerCallback)
     ;
-    
+
     // ============================================================================================ juce::ActionBroadcaster
-    
+
     py::class_<ActionBroadcaster> classActionBroadcaster (m, "ActionBroadcaster");
     classActionBroadcaster
         .def (py::init<>())
@@ -70,9 +67,9 @@ void registerJuceEventsBindings (pybind11::module_& m)
         .def ("removeAllActionListeners", &ActionBroadcaster::removeAllActionListeners)
         .def ("sendActionMessage", &ActionBroadcaster::sendActionMessage)
     ;
-    
+
     // ============================================================================================ juce::AsyncUpdater
-    
+
     struct PyAsyncUpdater : public AsyncUpdater
     {
         void handleAsyncUpdate() override
@@ -80,7 +77,7 @@ void registerJuceEventsBindings (pybind11::module_& m)
             PYBIND11_OVERRIDE_PURE(void, AsyncUpdater, handleAsyncUpdate);
         }
     };
-    
+
     py::class_<AsyncUpdater, PyAsyncUpdater> classAsyncUpdater (m, "AsyncUpdater");
     classAsyncUpdater
         .def (py::init<>())
@@ -90,9 +87,9 @@ void registerJuceEventsBindings (pybind11::module_& m)
         .def ("handleUpdateNowIfNeeded", &AsyncUpdater::handleUpdateNowIfNeeded)
         .def ("isUpdatePending", &AsyncUpdater::isUpdatePending)
     ;
-    
+
     // ============================================================================================ juce::MessageManager
-    
+
     py::class_<MessageManager> classMessageManager (m, "MessageManager");
     classMessageManager
         .def_static ("getInstance", &MessageManager::getInstance)
@@ -117,15 +114,15 @@ void registerJuceEventsBindings (pybind11::module_& m)
         .def ("deregisterBroadcastListener", &MessageManager::deregisterBroadcastListener)
         .def ("deliverBroadcastMessage", &MessageManager::deliverBroadcastMessage)
     ;
-    
+
     // ============================================================================================ juce::MessageManagerLock
-    
+
     py::class_<MessageManagerLock> classMessageManagerLock (m, "MessageManagerLock");
     classMessageManagerLock
         .def (py::init<>())
         .def ("lockWasGained", &MessageManagerLock::lockWasGained)
     ;
-    
+
     // ============================================================================================ juce::Timer
 
     struct PyTimer : public Timer
@@ -150,4 +147,4 @@ void registerJuceEventsBindings (pybind11::module_& m)
     ;
 }
 
-} // namespace straw::Bindings
+} // namespace jucepy::Bindings
