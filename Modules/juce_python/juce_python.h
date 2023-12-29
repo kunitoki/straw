@@ -14,7 +14,7 @@
   license:            DUAL
   minimumCppStandard: 17
 
-  dependencies:       juce_core juce_events juce_gui_basics
+  dependencies:       juce_core juce_events juce_graphics juce_gui_basics
 
  END_JUCE_MODULE_DECLARATION
 */
@@ -28,6 +28,15 @@
 */
 #ifndef JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION
  //#define JUCE_PYTHON_SCRIPT_CATCH_EXCEPTION 0
+#endif
+
+//==============================================================================
+/** Config: JUCE_PYTHON_EMBEDDED_INTERPRETER
+
+    Enable or disable embedding the interpreter.
+*/
+#ifndef JUCE_PYTHON_EMBEDDED_INTERPRETER
+ #define JUCE_PYTHON_EMBEDDED_INTERPRETER 1
 #endif
 
 #include "pybind11/embed.h"

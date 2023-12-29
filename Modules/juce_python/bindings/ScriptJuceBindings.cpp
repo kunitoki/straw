@@ -2,14 +2,19 @@
  * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
+#include "../juce_python.h"
+
 #include "ScriptJuceCoreBindings.h"
 #include "ScriptJuceEventsBindings.h"
 #include "ScriptJuceGraphicsBindings.h"
 #include "ScriptJuceGuiBasicsBindings.h"
 
 //=================================================================================================
-
+#if JUCE_PYTHON_EMBEDDED_INTERPRETER
 PYBIND11_EMBEDDED_MODULE(juce, m)
+#else
+PYBIND11_MODULE(juce, m)
+#endif
 {
     // Register juce_core bindings
     jucepy::Bindings::registerJuceCoreBindings (m);
