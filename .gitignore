@@ -39,3 +39,6 @@ __pycache__
 # Dirs
 Build/*
 .DS_Store
+Wheel/build
+Wheel/dist
+Wheel/juce.egg-info
