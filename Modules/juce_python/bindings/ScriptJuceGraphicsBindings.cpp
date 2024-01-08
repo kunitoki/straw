@@ -96,6 +96,74 @@ void registerPoint (pybind11::module_& m)
 // ============================================================================================
 
 template <template <class> class Class, class... Types>
+void registerLine (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "Line[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def ("getStartX", &T::getStartX)
+            .def ("getStartY", &T::getStartY)
+            .def ("getEndX", &T::getEndX)
+            .def ("getEndY", &T::getEndY)
+            .def ("getStart", &T::getStart)
+            .def ("getEnd", &T::getEnd)
+        //.def ("setStart", &T::setStart)
+        //.def ("setStart", &T::setStart)
+        //.def ("setEnd", &T::setEnd)
+        //.def ("setEnd", &T::setEnd)
+            .def ("reversed", &T::reversed)
+            .def ("applyTransform", &T::applyTransform)
+            .def ("getLength", &T::getLength)
+            .def ("getLengthSquared", &T::getLengthSquared)
+            .def ("isVertical", &T::isVertical)
+            .def ("isHorizontal", &T::isHorizontal)
+            .def ("getAngle", &T::getAngle)
+        //.def_static ("fromStartAndAngle", &T::fromStartAndAngle)
+            .def ("toFloat", &T::toFloat)
+            .def ("toDouble", &T::toDouble)
+            .def (py::self == py::self)
+            .def (py::self != py::self)
+            .def ("getIntersection", &T::getIntersection)
+        //.def ("intersects", &T::intersects)
+        //.def ("intersects", &T::intersects)
+        //.def ("getPointAlongLine", &T::getPointAlongLine)
+        //.def ("getPointAlongLine", &T::getPointAlongLine)
+            .def ("getPointAlongLineProportionally", &T::getPointAlongLineProportionally)
+            .def ("getDistanceFromPoint", &T::getDistanceFromPoint)
+            .def ("findNearestProportionalPositionTo", &T::findNearestProportionalPositionTo)
+            .def ("findNearestPointTo", &T::findNearestPointTo)
+            .def ("isPointAbove", &T::isPointAbove)
+            .def ("withLengthenedStart", &T::withLengthenedStart)
+            .def ("withShortenedStart", &T::withShortenedStart)
+            .def ("withLengthenedEnd", &T::withLengthenedEnd)
+            .def ("withShortenedEnd", &T::withShortenedEnd)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("Line", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
 void registerRectangle (pybind11::module_& m)
 {
     using namespace juce;
@@ -359,6 +427,10 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     registerPoint<Point, int, float> (m);
 
+    // ============================================================================================ juce::Line<>
+
+    registerLine<Line, int, float> (m);
+
     // ============================================================================================ juce::Rectangle<>
 
     registerRectangle<Rectangle, int, float> (m);
@@ -366,48 +438,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::BorderSize<>
 
     registerBorderSize<BorderSize, int, float> (m);
-
-    // ============================================================================================ juce::Line<>
-
-    py::class_<Line<float>> (m, "LineFloat")
-        .def (py::init<>())
-        .def ("getStartX", &Line<float>::getStartX)
-        .def ("getStartY", &Line<float>::getStartY)
-        .def ("getEndX", &Line<float>::getEndX)
-        .def ("getEndY", &Line<float>::getEndY)
-        .def ("getStart", &Line<float>::getStart)
-        .def ("getEnd", &Line<float>::getEnd)
-    //.def ("setStart", &Line<float>::setStart)
-    //.def ("setStart", &Line<float>::setStart)
-    //.def ("setEnd", &Line<float>::setEnd)
-    //.def ("setEnd", &Line<float>::setEnd)
-        .def ("reversed", &Line<float>::reversed)
-        .def ("applyTransform", &Line<float>::applyTransform)
-        .def ("getLength", &Line<float>::getLength)
-        .def ("getLengthSquared", &Line<float>::getLengthSquared)
-        .def ("isVertical", &Line<float>::isVertical)
-        .def ("isHorizontal", &Line<float>::isHorizontal)
-        .def ("getAngle", &Line<float>::getAngle)
-        .def_static ("fromStartAndAngle", &Line<float>::fromStartAndAngle)
-        .def ("toFloat", &Line<float>::toFloat)
-        .def ("toDouble", &Line<float>::toDouble)
-        .def (py::self == py::self)
-        .def (py::self != py::self)
-        .def ("getIntersection", &Line<float>::getIntersection)
-    //.def ("intersects", &Line<float>::intersects)
-    //.def ("intersects", &Line<float>::intersects)
-    //.def ("getPointAlongLine", &Line<float>::getPointAlongLine)
-    //.def ("getPointAlongLine", &Line<float>::getPointAlongLine)
-        .def ("getPointAlongLineProportionally", &Line<float>::getPointAlongLineProportionally)
-        .def ("getDistanceFromPoint", &Line<float>::getDistanceFromPoint)
-        .def ("findNearestProportionalPositionTo", &Line<float>::findNearestProportionalPositionTo)
-        .def ("findNearestPointTo", &Line<float>::findNearestPointTo)
-        .def ("isPointAbove", &Line<float>::isPointAbove)
-        .def ("withLengthenedStart", &Line<float>::withLengthenedStart)
-        .def ("withShortenedStart", &Line<float>::withShortenedStart)
-        .def ("withLengthenedEnd", &Line<float>::withLengthenedEnd)
-        .def ("withShortenedEnd", &Line<float>::withShortenedEnd)
-    ;
 
     // ============================================================================================ juce::Path
 
