@@ -3,6 +3,8 @@
  */
 
 #include "ScriptJuceGraphicsBindings.h"
+#include "../utilities/ClassDemangling.h"
+#include "../utilities/PythonInterop.h"
 
 //#include "../../values/straw_VariantConverter.h"
 
@@ -12,9 +14,250 @@
 #include <string_view>
 #include <tuple>
 
-//=================================================================================================
-
 namespace jucepy::Bindings {
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerPoint (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "Point[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType, ValueType>())
+            .def (py::self == py::self)
+            .def (py::self != py::self)
+            .def ("isOrigin", &T::isOrigin)
+            .def ("isFinite", &T::isFinite)
+            .def ("getX", &T::getX)
+            .def ("getY", &T::getY)
+            .def ("setX", &T::setX)
+            .def ("setY", &T::setY)
+            .def ("withX", &T::withX)
+            .def ("withY", &T::withY)
+            .def ("setXY", &T::setXY)
+            .def ("addXY", &T::addXY)
+            .def ("translated", &T::translated)
+            .def (py::self + py::self)
+            .def (py::self += py::self)
+            .def (py::self - py::self)
+            .def (py::self -= py::self)
+            .def (py::self * py::self)
+            .def (py::self *= py::self)
+            .def (py::self * float())
+            .def (py::self *= float())
+            .def (py::self / py::self)
+            .def (py::self /= py::self)
+            .def (py::self / float())
+            .def (py::self /= float())
+            .def (-py::self)
+            .def ("getDistanceFromOrigin", &T::getDistanceFromOrigin)
+            .def ("getDistanceFrom", &T::getDistanceFrom)
+            .def ("getDistanceSquaredFromOrigin", &T::getDistanceSquaredFromOrigin)
+            .def ("getDistanceSquaredFrom", &T::getDistanceSquaredFrom)
+            .def ("getAngleToPoint", &T::getAngleToPoint)
+            .def ("rotatedAboutOrigin", &T::rotatedAboutOrigin)
+            .def ("getPointOnCircumference", py::overload_cast<float, float>(&T::getPointOnCircumference, py::const_))
+            .def ("getPointOnCircumference", py::overload_cast<float, float, float>(&T::getPointOnCircumference, py::const_))
+            .def ("getDotProduct", &T::getDotProduct)
+            .def ("applyTransform", &T::applyTransform)
+            .def ("transformedBy", &T::transformedBy)
+            .def ("toInt", &T::toInt)
+            .def ("toFloat", &T::toFloat)
+            .def ("toDouble", &T::toDouble)
+            .def ("roundToInt", &T::roundToInt)
+            .def ("toString", &T::toString)
+            .def_property("x", &T::getX, &T::setX)
+            .def_property("y", &T::getY, &T::setY)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("Point", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerRectangle (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "Rectangle[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType, ValueType>())
+            .def (py::init<ValueType, ValueType, ValueType, ValueType>())
+            .def (py::init<Point<ValueType>, Point<ValueType>>())
+            .def ("isEmpty", &T::isEmpty)
+            .def ("isFinite", &T::isFinite)
+            .def ("getX", &T::getX)
+            .def ("getY", &T::getY)
+            .def ("getWidth", &T::getWidth)
+            .def ("getHeight", &T::getHeight)
+            .def ("getRight", &T::getRight)
+            .def ("getBottom", &T::getBottom)
+            .def ("getCentreX", &T::getCentreX)
+            .def ("getCentreX", &T::getCentreX)
+            .def ("getAspectRatio", &T::getAspectRatio)
+            .def ("getPosition", &T::getPosition)
+            .def ("setPosition", py::overload_cast<Point<ValueType>> (&T::setPosition))
+            .def ("setPosition", py::overload_cast<ValueType, ValueType> (&T::setPosition))
+            .def ("getTopLeft", &T::getTopLeft)
+            .def ("getTopRight", &T::getTopRight)
+            .def ("getBottomLeft", &T::getBottomLeft)
+            .def ("getBottomRight", &T::getBottomRight)
+            .def ("getHorizontalRange", &T::getHorizontalRange)
+            .def ("getVerticalRange", &T::getVerticalRange)
+            .def ("setSize", &T::setSize)
+            .def ("setBounds", &T::setBounds)
+            .def ("setX", &T::setX)
+            .def ("setY", &T::setY)
+            .def ("setWidth", &T::setWidth)
+            .def ("setHeight", &T::setHeight)
+            .def ("setCentre", py::overload_cast<Point<ValueType>> (&T::setCentre))
+            .def ("setCentre", py::overload_cast<ValueType, ValueType> (&T::setCentre))
+            .def ("setHorizontalRange", &T::setHorizontalRange)
+            .def ("setVerticalRange", &T::setVerticalRange)
+            .def ("withX", &T::withX)
+            .def ("withY", &T::withY)
+            .def ("withRightX", &T::withRightX)
+            .def ("withBottomY", &T::withBottomY)
+            .def ("withPosition", py::overload_cast<Point<ValueType>> (&T::withPosition, py::const_))
+            .def ("withPosition", py::overload_cast<ValueType, ValueType> (&T::withPosition, py::const_))
+            .def ("withZeroOrigin", &T::withZeroOrigin)
+            .def ("withCentre", &T::withCentre)
+            .def ("withWidth", &T::withWidth)
+            .def ("withHeight", &T::withHeight)
+            .def ("withSize", &T::withSize)
+            .def ("withSizeKeepingCentre", &T::withSizeKeepingCentre)
+            .def ("setLeft", &T::setLeft)
+            .def ("withLeft", &T::withLeft)
+            .def ("setTop", &T::setTop)
+            .def ("withTop", &T::withTop)
+            .def ("setRight", &T::setRight)
+            .def ("withRight", &T::withRight)
+            .def ("setBottom", &T::setBottom)
+            .def ("withBottom", &T::withBottom)
+            .def ("withTrimmedLeft", &T::withTrimmedLeft)
+            .def ("withTrimmedRight", &T::withTrimmedRight)
+            .def ("withTrimmedTop", &T::withTrimmedTop)
+            .def ("withTrimmedBottom", &T::withTrimmedBottom)
+            .def ("translate", &T::translate)
+            .def ("translated", &T::translated)
+            // TODO - operators
+            .def ("expand", &T::expand)
+            .def ("expanded", py::overload_cast<ValueType> (&T::expanded, py::const_))
+            .def ("expanded", py::overload_cast<ValueType, ValueType> (&T::expanded, py::const_))
+            .def ("reduce", &T::reduce)
+            .def ("reduced", py::overload_cast<ValueType> (&T::reduced, py::const_))
+            .def ("reduced", py::overload_cast<ValueType, ValueType> (&T::reduced, py::const_))
+            .def ("removeFromTop", &T::removeFromTop)
+            .def ("removeFromLeft", &T::removeFromLeft)
+            .def ("removeFromRight", &T::removeFromRight)
+            .def ("removeFromBottom", &T::removeFromBottom)
+            .def ("getConstrainedPoint", &T::getConstrainedPoint)
+            .def ("getRelativePoint", &T::template getRelativePoint<float>)
+            .def ("getRelativePoint", &T::template getRelativePoint<double>)
+            .def ("proportionOfWidth", &T::template proportionOfWidth<float>)
+            .def ("proportionOfWidth", &T::template proportionOfWidth<double>)
+            .def ("proportionOfHeight", &T::template proportionOfHeight<float>)
+            .def ("proportionOfHeight", &T::template proportionOfHeight<double>)
+            .def ("getProportion", &T::template getProportion<float>)
+            .def ("getProportion", &T::template getProportion<double>)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("Rectangle", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerBorderSize (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "BorderSize[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType>())
+            .def (py::init<ValueType, ValueType, ValueType, ValueType>())
+            .def ("getTop", &T::getTop)
+            .def ("getLeft", &T::getLeft)
+            .def ("getBottom", &T::getBottom)
+            .def ("getRight", &T::getRight)
+            .def ("getTopAndBottom", &T::getTopAndBottom)
+            .def ("getLeftAndRight", &T::getLeftAndRight)
+            .def ("isEmpty", &T::isEmpty)
+            .def ("setTop", &T::setTop)
+            .def ("setLeft", &T::setLeft)
+            .def ("setBottom", &T::setBottom)
+            .def ("setRight", &T::setRight)
+            .def ("subtractedFrom", py::overload_cast<const Rectangle<ValueType>&> (&T::subtractedFrom, py::const_))
+            .def ("subtractFrom", &T::subtractFrom)
+            .def ("addedTo", py::overload_cast<const Rectangle<ValueType>&> (&T::addedTo, py::const_))
+            .def ("addTo", &T::addTo)
+            .def ("subtractedFrom", py::overload_cast<const T&> (&T::subtractedFrom, py::const_))
+            .def ("addedTo", py::overload_cast<const T&> (&T::addedTo, py::const_))
+            .def ("multipliedBy", &T::template multipliedBy<int>)
+            .def ("multipliedBy", &T::template multipliedBy<float>)
+            .def (py::self == py::self)
+            .def (py::self != py::self)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("BorderSize", type);
+}
 
 void registerJuceGraphicsBindings (pybind11::module_& m)
 {
@@ -24,9 +267,8 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::AffineTransform
 
-    py::class_<Justification> justificationClass (m, "Justification");
-
-    justificationClass
+    py::class_<Justification> classJustification (m, "Justification");
+    classJustification
         .def (py::init<Justification::Flags>())
         .def (py::init<const Justification&>())
         .def (py::self == py::self)
@@ -39,7 +281,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     //.def ("appliedToRectangle", &Justification::appliedToRectangle)
     ;
 
-    py::enum_<Justification::Flags> (justificationClass, "Flags")
+    py::enum_<Justification::Flags> (classJustification, "Flags")
         .value("left", Justification::Flags::left)
         .value("right", Justification::Flags::right)
         .value("horizontallyCentred", Justification::Flags::horizontallyCentred)
@@ -115,147 +357,17 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::Point<>
 
-    py::class_<Point<int>> (m, "PointInt")
-        .def (py::init<>())
-    //.def (py::init<const Point<int>&>())
-    //.def (py::init<int, int>())
-        .def (py::self == py::self)
-        .def (py::self != py::self)
-        .def ("isOrigin", &Point<int>::isOrigin)
-        .def ("isFinite", &Point<int>::isFinite)
-        .def ("getX", &Point<int>::getX)
-        .def ("getY", &Point<int>::getY)
-        .def ("setX", &Point<int>::setX)
-        .def ("setY", &Point<int>::setY)
-        .def ("withX", &Point<int>::withX)
-        .def ("withY", &Point<int>::withY)
-        .def ("setXY", &Point<int>::setXY)
-        .def ("addXY", &Point<int>::addXY)
-        .def ("translated", &Point<int>::translated)
-        .def (py::self + py::self)
-        .def (py::self += py::self)
-        .def (py::self - py::self)
-        .def (py::self -= py::self)
-        .def (py::self * py::self)
-        .def (py::self *= py::self)
-        .def (py::self * float())
-        .def (py::self *= float())
-        .def (py::self / py::self)
-        .def (py::self /= py::self)
-        .def (py::self / float())
-        .def (py::self /= float())
-        .def (-py::self)
-        .def ("getDistanceFromOrigin", &Point<int>::getDistanceFromOrigin)
-        .def ("getDistanceFrom", &Point<int>::getDistanceFrom)
-        .def ("getDistanceSquaredFromOrigin", &Point<int>::getDistanceSquaredFromOrigin)
-        .def ("getDistanceSquaredFrom", &Point<int>::getDistanceSquaredFrom)
-        .def ("getAngleToPoint", &Point<int>::getAngleToPoint)
-        .def ("rotatedAboutOrigin", &Point<int>::rotatedAboutOrigin)
-        .def ("getPointOnCircumference", py::overload_cast<float, float>(&Point<int>::getPointOnCircumference, py::const_))
-        .def ("getPointOnCircumference", py::overload_cast<float, float, float>(&Point<int>::getPointOnCircumference, py::const_))
-        .def ("getDotProduct", &Point<int>::getDotProduct)
-        .def ("applyTransform", &Point<int>::applyTransform)
-        .def ("transformedBy", &Point<int>::transformedBy)
-        .def ("toInt", &Point<int>::toInt)
-        .def ("toFloat", &Point<int>::toFloat)
-        .def ("toDouble", &Point<int>::toDouble)
-        .def ("roundToInt", &Point<int>::roundToInt)
-        .def ("toString", &Point<int>::toString)
-        .def_property("x", &Point<int>::getX, &Point<int>::setX)
-        .def_property("y", &Point<int>::getY, &Point<int>::setY)
-    ;
-
-    py::class_<Point<float>> (m, "PointFloat")
-        .def (py::init<>())
-    //.def (py::init<const Point<float>&>())
-    //.def (py::init<float, float>())
-        .def (py::self == py::self)
-        .def (py::self != py::self)
-        .def ("isOrigin", &Point<float>::isOrigin)
-        .def ("isFinite", &Point<float>::isFinite)
-        .def ("getX", &Point<float>::getX)
-        .def ("getY", &Point<float>::getY)
-        .def ("setX", &Point<float>::setX)
-        .def ("setY", &Point<float>::setY)
-        .def ("withX", &Point<float>::withX)
-        .def ("withY", &Point<float>::withY)
-        .def ("setXY", &Point<float>::setXY)
-        .def ("addXY", &Point<float>::addXY)
-        .def ("translated", &Point<float>::translated)
-        .def (py::self + py::self)
-        .def (py::self += py::self)
-        .def (py::self - py::self)
-        .def (py::self -= py::self)
-        .def (py::self * py::self)
-        .def (py::self *= py::self)
-        .def (py::self * float())
-        .def (py::self *= float())
-        .def (py::self / py::self)
-        .def (py::self /= py::self)
-        .def (py::self / float())
-        .def (py::self /= float())
-        .def (-py::self)
-        .def ("getDistanceFromOrigin", &Point<float>::getDistanceFromOrigin)
-        .def ("getDistanceFrom", &Point<float>::getDistanceFrom)
-        .def ("getDistanceSquaredFromOrigin", &Point<float>::getDistanceSquaredFromOrigin)
-        .def ("getDistanceSquaredFrom", &Point<float>::getDistanceSquaredFrom)
-        .def ("getAngleToPoint", &Point<float>::getAngleToPoint)
-        .def ("rotatedAboutOrigin", &Point<float>::rotatedAboutOrigin)
-        .def ("getPointOnCircumference", py::overload_cast<float, float>(&Point<float>::getPointOnCircumference, py::const_))
-        .def ("getPointOnCircumference", py::overload_cast<float, float, float>(&Point<float>::getPointOnCircumference, py::const_))
-        .def ("getDotProduct", &Point<float>::getDotProduct)
-        .def ("applyTransform", &Point<float>::applyTransform)
-        .def ("transformedBy", &Point<float>::transformedBy)
-        .def ("toInt", &Point<float>::toInt)
-        .def ("toFloat", &Point<float>::toFloat)
-        .def ("toDouble", &Point<float>::toDouble)
-        .def ("roundToInt", &Point<float>::roundToInt)
-        .def ("toString", &Point<float>::toString)
-        .def_property("x", &Point<float>::getX, &Point<float>::setX)
-        .def_property("y", &Point<float>::getY, &Point<float>::setY)
-    ;
+    registerPoint<Point, int, float> (m);
 
     // ============================================================================================ juce::Rectangle<>
 
-    py::class_<Rectangle<int>> (m, "RectangleInt")
-        .def ("isEmpty", &Rectangle<int>::isEmpty)
-        .def ("isFinite", &Rectangle<int>::isFinite)
-        .def ("getX", &Rectangle<int>::getX)
-        .def ("getY", &Rectangle<int>::getY)
-        .def ("getWidth", &Rectangle<int>::getWidth)
-        .def ("getHeight", &Rectangle<int>::getHeight)
-        .def ("getRight", &Rectangle<int>::getRight)
-        .def ("getBottom", &Rectangle<int>::getBottom)
-        .def ("getCentreX", &Rectangle<int>::getCentreX)
-        .def ("getCentreX", &Rectangle<int>::getCentreX)
-        .def ("getAspectRatio", &Rectangle<int>::getAspectRatio)
-        .def ("getPosition", &Rectangle<int>::getPosition)
-        .def ("getTopLeft", &Rectangle<int>::getTopLeft)
-        .def ("getTopRight", &Rectangle<int>::getTopRight)
-        .def ("getBottomLeft", &Rectangle<int>::getBottomLeft)
-        .def ("getBottomRight", &Rectangle<int>::getBottomRight)
-    ;
+    registerRectangle<Rectangle, int, float> (m);
 
-    py::class_<Rectangle<float>> (m, "RectangleFloat")
-        .def ("isEmpty", &Rectangle<float>::isEmpty)
-        .def ("isFinite", &Rectangle<float>::isFinite)
-        .def ("getX", &Rectangle<float>::getX)
-        .def ("getY", &Rectangle<float>::getY)
-        .def ("getWidth", &Rectangle<float>::getWidth)
-        .def ("getHeight", &Rectangle<float>::getHeight)
-        .def ("getRight", &Rectangle<float>::getRight)
-        .def ("getBottom", &Rectangle<float>::getBottom)
-        .def ("getCentreX", &Rectangle<float>::getCentreX)
-        .def ("getCentreX", &Rectangle<float>::getCentreX)
-        .def ("getAspectRatio", &Rectangle<float>::getAspectRatio)
-        .def ("getPosition", &Rectangle<float>::getPosition)
-        .def ("getTopLeft", &Rectangle<float>::getTopLeft)
-        .def ("getTopRight", &Rectangle<float>::getTopRight)
-        .def ("getBottomLeft", &Rectangle<float>::getBottomLeft)
-        .def ("getBottomRight", &Rectangle<float>::getBottomRight)
-    ;
+    // ============================================================================================ juce::BorderSize<>
 
-    // ============================================================================================ juce::Rectangle<>
+    registerBorderSize<BorderSize, int, float> (m);
+
+    // ============================================================================================ juce::Line<>
 
     py::class_<Line<float>> (m, "LineFloat")
         .def (py::init<>())
@@ -297,11 +409,10 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("withShortenedEnd", &Line<float>::withShortenedEnd)
     ;
 
-    // ============================================================================================ juce::Rectangle<>
+    // ============================================================================================ juce::Path
 
-    py::class_<Path> pathClass (m, "Path");
-
-    pathClass
+    py::class_<Path> classPath (m, "Path");
+    classPath
         .def (py::init<>())
         .def (py::self == py::self)
         .def (py::self != py::self)
@@ -361,6 +472,41 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("toString", &Path::toString)
         .def ("restoreFromString", &Path::restoreFromString)
     ;
+
+    // ============================================================================================ juce::Path
+
+    py::class_<PathStrokeType> classPathStrokeType (m, "PathStrokeType");
+    classPathStrokeType
+        .def (py::init<float>())
+        .def (py::init<float, PathStrokeType::JointStyle>())
+        .def (py::init<float, PathStrokeType::JointStyle, PathStrokeType::EndCapStyle>())
+        .def ("createStrokedPath", [](const PathStrokeType& self, Path* destPath, const Path& sourcePath, const AffineTransform& transform, float extraAccuracy)
+        {
+            self.createStrokedPath (*destPath, sourcePath, transform, extraAccuracy);
+        })
+        //.def ("createDashedStroke", ...)
+        //.def ("createStrokeWithArrowheads", ...)
+        .def ("getStrokeThickness", &PathStrokeType::getStrokeThickness)
+        .def ("setStrokeThickness", &PathStrokeType::setStrokeThickness)
+        .def ("getJointStyle", &PathStrokeType::getJointStyle)
+        .def ("setJointStyle", &PathStrokeType::setJointStyle)
+        .def ("getEndStyle", &PathStrokeType::getEndStyle)
+        .def ("setEndStyle", &PathStrokeType::setEndStyle)
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+    ;
+
+    py::enum_<PathStrokeType::JointStyle> (classPathStrokeType, "JointStyle")
+        .value("mitered", PathStrokeType::mitered)
+        .value("curved", PathStrokeType::curved)
+        .value("beveled", PathStrokeType::beveled)
+        .export_values();
+
+    py::enum_<PathStrokeType::EndCapStyle> (classPathStrokeType, "EndCapStyle")
+        .value("butt", PathStrokeType::butt)
+        .value("square", PathStrokeType::square)
+        .value("rounded", PathStrokeType::rounded)
+        .export_values();
 
     // ============================================================================================ juce::PixelARGB
 
@@ -442,7 +588,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     //.def (py::init<uint32>())
     //.def (py::init<uint8, uint8, uint8>())
     //.def (py::init<uint8, uint8, uint8, uint8>())
-    //.def (py::init<uint8, uint8, uint8, float>())
+        .def (py::init<uint8, uint8, uint8, float>())
     //.def (py::init<float, float, float, uint8>())
     //.def (py::init<float, float, float, float>())
     //.def (py::init<PixelARGB>())
@@ -532,7 +678,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Image
 
     py::class_<Image> imageClass (m, "Image");
-
     imageClass
         .def (py::init<>())
     //.def (py::init<Image::PixelFormat, int, int, bool>())
@@ -610,6 +755,96 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
                       [](const FillType& self) { return self.transform; },
                       [](FillType& self, const AffineTransform& v) { self.transform = v; })
     ;
+
+    // ============================================================================================ juce::Graphics
+
+    py::class_<Graphics> classGraphics (m, "Graphics");
+    classGraphics
+        .def (py::init<const Image&>())
+        .def ("setColour", &Graphics::setColour)
+        .def ("setOpacity", &Graphics::setOpacity)
+        .def ("setGradientFill", py::overload_cast<const ColourGradient&> (&Graphics::setGradientFill))
+        .def ("setTiledImageFill", &Graphics::setTiledImageFill)
+        .def ("setFillType", &Graphics::setFillType)
+    //.def ("setFont", py::overload_cast<const Font&>(&Graphics::setFont))
+    //.def ("setFont", py::overload_cast<float>(&Graphics::setFont))
+    //.def ("getCurrentFont", &Graphics::getCurrentFont)
+        .def ("drawSingleLineText", &Graphics::drawSingleLineText)
+        .def ("drawMultiLineText", &Graphics::drawMultiLineText)
+        .def ("drawText", py::overload_cast<const String&, int, int, int, int, Justification, bool> (&Graphics::drawText, py::const_))
+        .def ("drawText", py::overload_cast<const String&, Rectangle<int>, Justification, bool> (&Graphics::drawText, py::const_))
+        .def ("drawText", py::overload_cast<const String&, Rectangle<float>, Justification, bool> (&Graphics::drawText, py::const_))
+        .def ("drawFittedText", py::overload_cast<const String&, int, int, int, int, Justification, int, float> (&Graphics::drawFittedText, py::const_))
+        .def ("drawFittedText", py::overload_cast<const String&, Rectangle<int>, Justification, int, float> (&Graphics::drawFittedText, py::const_))
+        .def ("fillAll", py::overload_cast<> (&Graphics::fillAll, py::const_))
+        .def ("fillAll", py::overload_cast<Colour> (&Graphics::fillAll, py::const_))
+        .def ("fillRect", py::overload_cast<Rectangle<int>> (&Graphics::fillRect, py::const_))
+        .def ("fillRect", py::overload_cast<Rectangle<float>> (&Graphics::fillRect, py::const_))
+        .def ("fillRect", py::overload_cast<int, int, int, int> (&Graphics::fillRect, py::const_))
+        .def ("fillRect", py::overload_cast<float, float, float, float> (&Graphics::fillRect, py::const_))
+    //.def ("fillRectList", py::overload_cast<const RectangleList<float>&> (&Graphics::fillRectList, py::const_))
+    //.def ("fillRectList", py::overload_cast<const RectangleList<int>&> (&Graphics::fillRectList, py::const_))
+        .def ("fillRoundedRectangle", py::overload_cast<float, float, float, float, float> (&Graphics::fillRoundedRectangle, py::const_))
+        .def ("fillRoundedRectangle", py::overload_cast<Rectangle<float>, float> (&Graphics::fillRoundedRectangle, py::const_))
+        .def ("fillCheckerBoard", &Graphics::fillCheckerBoard)
+        .def ("drawRect", py::overload_cast<int, int, int, int, int> (&Graphics::drawRect, py::const_))
+        .def ("drawRect", py::overload_cast<float, float, float, float, float> (&Graphics::drawRect, py::const_))
+        .def ("drawRect", py::overload_cast<Rectangle<int>, int> (&Graphics::drawRect, py::const_))
+        .def ("drawRect", py::overload_cast<Rectangle<float>, float> (&Graphics::drawRect, py::const_))
+        .def ("drawRoundedRectangle", py::overload_cast<float, float, float, float, float, float> (&Graphics::drawRoundedRectangle, py::const_))
+        .def ("drawRoundedRectangle", py::overload_cast<Rectangle<float>, float, float> (&Graphics::drawRoundedRectangle, py::const_))
+        .def ("fillEllipse", py::overload_cast<float, float, float, float> (&Graphics::fillEllipse, py::const_))
+        .def ("fillEllipse", py::overload_cast<Rectangle<float>> (&Graphics::fillEllipse, py::const_))
+        .def ("drawEllipse", py::overload_cast<float, float, float, float, float> (&Graphics::drawEllipse, py::const_))
+        .def ("drawEllipse", py::overload_cast<Rectangle<float>, float> (&Graphics::drawEllipse, py::const_))
+        .def ("drawLine", py::overload_cast<float, float, float, float> (&Graphics::drawLine, py::const_))
+        .def ("drawLine", py::overload_cast<float, float, float, float, float> (&Graphics::drawLine, py::const_))
+        .def ("drawLine", py::overload_cast<Line<float>> (&Graphics::drawLine, py::const_))
+        .def ("drawLine", py::overload_cast<Line<float>, float> (&Graphics::drawLine, py::const_))
+    //.def ("drawDashedLine", &Graphics::drawDashedLine)
+        .def ("drawVerticalLine", &Graphics::drawVerticalLine)
+        .def ("drawHorizontalLine", &Graphics::drawHorizontalLine)
+        .def ("fillPath", py::overload_cast<const Path&> (&Graphics::fillPath, py::const_))
+        .def ("fillPath", py::overload_cast<const Path&, const AffineTransform&> (&Graphics::fillPath, py::const_))
+        .def ("strokePath", &Graphics::strokePath)
+        .def ("drawArrow", &Graphics::drawArrow)
+        .def ("setImageResamplingQuality", &Graphics::setImageResamplingQuality)
+        .def ("drawImageAt", &Graphics::drawImageAt)
+        .def ("drawImage", py::overload_cast<const Image&, int, int, int, int, int, int, int, int, bool> (&Graphics::drawImage, py::const_))
+        .def ("drawImageTransformed", &Graphics::drawImageTransformed)
+        .def ("drawImage", py::overload_cast<const Image&, Rectangle<float>, RectanglePlacement, bool> (&Graphics::drawImage, py::const_))
+        .def ("drawImageWithin", &Graphics::drawImageWithin)
+        .def ("getClipBounds", &Graphics::getClipBounds)
+        .def ("clipRegionIntersects", &Graphics::clipRegionIntersects)
+        .def ("reduceClipRegion", py::overload_cast<int, int, int, int> (&Graphics::reduceClipRegion))
+        .def ("reduceClipRegion", py::overload_cast<Rectangle<int>> (&Graphics::reduceClipRegion))
+        .def ("reduceClipRegion", py::overload_cast<const RectangleList<int>&> (&Graphics::reduceClipRegion))
+        .def ("reduceClipRegion", py::overload_cast<const Path&, const AffineTransform&> (&Graphics::reduceClipRegion))
+        .def ("reduceClipRegion", py::overload_cast<const Image&, const AffineTransform&> (&Graphics::reduceClipRegion))
+        .def ("excludeClipRegion", &Graphics::excludeClipRegion)
+        .def ("isClipEmpty", &Graphics::isClipEmpty)
+        .def ("saveState", &Graphics::saveState)
+        .def ("restoreState", &Graphics::restoreState)
+        .def ("beginTransparencyLayer", &Graphics::beginTransparencyLayer)
+        .def ("endTransparencyLayer", &Graphics::endTransparencyLayer)
+        .def ("setOrigin", py::overload_cast<Point<int>> (&Graphics::setOrigin))
+        .def ("setOrigin", py::overload_cast<int, int> (&Graphics::setOrigin))
+        .def ("addTransform", &Graphics::addTransform)
+        .def ("resetToDefaultState", &Graphics::resetToDefaultState)
+        .def ("isVectorDevice", &Graphics::isVectorDevice)
+    ;
+
+    py::enum_<Graphics::ResamplingQuality> (classGraphics, "ResamplingQuality")
+        .value("lowResamplingQuality", Graphics::lowResamplingQuality)
+        .value("mediumResamplingQuality", Graphics::mediumResamplingQuality)
+        .value("highResamplingQuality", Graphics::highResamplingQuality)
+        .export_values();
+
+    //py::class_<Graphics::ScopedSaveState> (classGraphics, "ScopedSaveState")
+    //    .def (py::init<>([](Graphics* g) { return Graphics::ScopedSaveState (*g); }))
+    //    .def ("__enter__", [] {})
+    //    .def ("__exit__", [] {});
+
 }
 
 } // namespace jucepy::Bindings

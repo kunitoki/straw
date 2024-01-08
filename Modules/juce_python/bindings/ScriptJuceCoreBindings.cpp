@@ -3,6 +3,8 @@
  */
 
 #include "ScriptJuceCoreBindings.h"
+#include "../utilities/ClassDemangling.h"
+#include "../utilities/PythonInterop.h"
 
 //#include "../../values/straw_VariantConverter.h"
 
@@ -15,21 +17,19 @@ namespace detail {
 
 bool type_caster<juce::StringRef>::load (handle src, bool)
 {
-    PyObject* source = src.ptr();
+    if (! src)
+        return false;
 
-    auto baseType = Py_TYPE (source)->tp_base;
-    if (baseType == &PyUnicode_Type)
-    {
-        Py_ssize_t size = -1;
-        const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (source, &size));
-        if (buffer == nullptr)
-            return false;
+    if (! PyUnicode_Check (src.ptr()))
+        return load_raw(src);
 
-        value = buffer;
-        return true;
-    }
+    Py_ssize_t size = -1;
+    const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (src.ptr(), &size));
+    if (buffer == nullptr)
+        return false;
 
-    return false;
+    value = buffer;
+    return true;
 }
 
 handle type_caster<juce::StringRef>::cast (const juce::StringRef& src, return_value_policy policy, handle parent)
@@ -39,25 +39,48 @@ handle type_caster<juce::StringRef>::cast (const juce::StringRef& src, return_va
     return PyUnicode_FromStringAndSize (static_cast<const char*> (src.text), static_cast<Py_ssize_t> (src.length()));
 }
 
-//=================================================================================================
-
-bool type_caster<juce::String>::load (handle src, bool)
+bool type_caster<juce::StringRef>::load_raw (handle src)
 {
-    PyObject* source = src.ptr();
-
-    auto baseType = Py_TYPE (source)->tp_base;
-    if (baseType == &PyUnicode_Type)
+    if (PYBIND11_BYTES_CHECK (src.ptr()))
     {
-        Py_ssize_t size = -1;
-        const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (source, &size));
-        if (buffer == nullptr)
-            return false;
+        const char* bytes = PYBIND11_BYTES_AS_STRING (src.ptr());
+        if (! bytes)
+            pybind11_fail ("Unexpected PYBIND11_BYTES_AS_STRING() failure.");
 
-        value = juce::String::fromUTF8 (buffer, static_cast<int> (size));
+        value = bytes;
+        return true;
+    }
+
+    if (PyByteArray_Check (src.ptr()))
+    {
+        const char* bytearray = PyByteArray_AsString (src.ptr());
+        if (! bytearray)
+            pybind11_fail ("Unexpected PyByteArray_AsString() failure.");
+
+        value = bytearray;
         return true;
     }
 
     return false;
+}
+
+//=================================================================================================
+
+bool type_caster<juce::String>::load (handle src, bool)
+{
+    if (! src)
+        return false;
+
+    if (! PyUnicode_Check (src.ptr()))
+        return load_raw(src);
+
+    Py_ssize_t size = -1;
+    const auto* buffer = reinterpret_cast<const char*> (PyUnicode_AsUTF8AndSize (src.ptr(), &size));
+    if (buffer == nullptr)
+        return false;
+
+    value = juce::String::fromUTF8 (buffer, static_cast<int> (size));
+    return true;
 }
 
 handle type_caster<juce::String>::cast (const juce::String& src, return_value_policy policy, handle parent)
@@ -65,6 +88,31 @@ handle type_caster<juce::String>::cast (const juce::String& src, return_value_po
     juce::ignoreUnused (policy, parent);
 
     return PyUnicode_FromStringAndSize (src.toRawUTF8(), static_cast<Py_ssize_t> (src.getNumBytesAsUTF8()));
+}
+
+bool type_caster<juce::String>::load_raw (handle src)
+{
+    if (PYBIND11_BYTES_CHECK (src.ptr()))
+    {
+        const char* bytes = PYBIND11_BYTES_AS_STRING (src.ptr());
+        if (! bytes)
+            pybind11_fail ("Unexpected PYBIND11_BYTES_AS_STRING() failure.");
+
+        value = juce::String::fromUTF8 (bytes, static_cast<int> (PYBIND11_BYTES_SIZE (src.ptr())));
+        return true;
+    }
+
+    if (PyByteArray_Check (src.ptr()))
+    {
+        const char* bytearray = PyByteArray_AsString (src.ptr());
+        if (! bytearray)
+            pybind11_fail ("Unexpected PyByteArray_AsString() failure.");
+
+        value = juce::String::fromUTF8 (bytearray, static_cast<int> (PyByteArray_Size (src.ptr())));
+        return true;
+    }
+
+    return false;
 }
 
 //=================================================================================================
@@ -306,9 +354,70 @@ handle type_caster<juce::NamedValueSet>::cast (const juce::NamedValueSet& src, r
 
 }} // namespace PYBIND11_NAMESPACE::detail
 
-//=================================================================================================
-
 namespace jucepy::Bindings {
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
+void registerRange (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "Range[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<ValueType, ValueType>())
+            .def_static ("between", &T::between)
+            .def_static ("withStartAndLength", &T::withStartAndLength)
+            .def_static ("emptyRange", &T::emptyRange)
+            .def ("getStart", &T::getStart)
+            .def ("getLength", &T::getLength)
+            .def ("getEnd", &T::getEnd)
+            .def ("isEmpty", &T::isEmpty)
+            .def ("setStart", &T::setStart)
+            .def ("withStart", &T::withStart)
+            .def ("movedToStartAt", &T::movedToStartAt)
+            .def ("setEnd", &T::setEnd)
+            .def ("withEnd", &T::withEnd)
+            .def ("movedToEndAt", &T::movedToEndAt)
+            .def ("setLength", &T::setLength)
+            .def ("expanded", &T::expanded)
+            .def (py::self += ValueType())
+            .def (py::self -= ValueType())
+            .def (py::self + ValueType())
+            .def (py::self - ValueType())
+            .def (py::self == py::self)
+            .def (py::self != py::self)
+            .def ("contains", py::overload_cast<const ValueType> (&T::contains, py::const_))
+            .def ("clipValue", &T::clipValue)
+            .def ("contains", py::overload_cast<T> (&T::contains, py::const_))
+            .def ("intersects", &T::intersects)
+            .def ("getIntersectionWith", &T::getIntersectionWith)
+            .def ("getUnionWith", py::overload_cast<T> (&T::getUnionWith, py::const_))
+            .def ("getUnionWith", py::overload_cast<const ValueType> (&T::getUnionWith, py::const_))
+            .def ("constrainRange", &T::constrainRange)
+        //.def_static ("findMinAndMax", &T::template findMinAndMax<int>)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("Range", type);
+}
 
 void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
 {
@@ -341,6 +450,85 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("makeInt", static_cast<uint32 (*)(uint8, uint8, uint8, uint8)>(&ByteOrder::makeInt))
         .def_static ("makeInt", static_cast<uint64 (*)(uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint8)>(&ByteOrder::makeInt))
         .def_static ("isBigEndian", &ByteOrder::isBigEndian)
+    ;
+
+    // ============================================================================================ juce::BigInteger
+
+    py::class_<BigInteger> classBigInteger (m, "BigInteger");
+    classBigInteger
+        .def (py::init<>())
+        .def (py::init<int32>())
+        .def (py::init<int64>())
+        .def ("swapWith", &BigInteger::swapWith)
+        .def ("isZero", &BigInteger::isZero)
+        .def ("isOne", &BigInteger::isOne)
+        .def ("toInteger", &BigInteger::toInteger)
+        .def ("toInt64", &BigInteger::toInt64)
+        .def ("clear", &BigInteger::clear, py::return_value_policy::reference)
+        .def ("clearBit", &BigInteger::clearBit, py::return_value_policy::reference)
+        .def ("setBit", py::overload_cast<int> (&BigInteger::setBit), py::return_value_policy::reference)
+        .def ("setBit", py::overload_cast<int, bool> (&BigInteger::setBit), py::return_value_policy::reference)
+        .def ("setRange", &BigInteger::setRange, py::return_value_policy::reference)
+        .def ("insertBit", &BigInteger::insertBit, py::return_value_policy::reference)
+        .def ("getBitRange", &BigInteger::getBitRange, py::return_value_policy::reference)
+        .def ("getBitRangeAsInt", &BigInteger::getBitRangeAsInt, py::return_value_policy::reference)
+        .def ("setBitRangeAsInt", &BigInteger::setBitRangeAsInt, py::return_value_policy::reference)
+        .def ("shiftBits", &BigInteger::shiftBits, py::return_value_policy::reference)
+        .def ("countNumberOfSetBits", &BigInteger::countNumberOfSetBits)
+        .def ("findNextSetBit", &BigInteger::findNextSetBit)
+        .def ("findNextClearBit", &BigInteger::findNextClearBit)
+        .def ("getHighestBit", &BigInteger::getHighestBit)
+        .def ("isNegative", &BigInteger::isNegative)
+        .def ("setNegative", &BigInteger::setNegative)
+        .def ("negate", &BigInteger::negate)
+        .def (py::self += py::self)
+        .def (py::self -= py::self)
+        .def (py::self *= py::self)
+        .def (py::self /= py::self)
+        .def (py::self |= py::self)
+        .def (py::self &= py::self)
+        .def (py::self ^= py::self)
+        .def (py::self %= py::self)
+        .def (py::self <<= int())
+        .def (py::self >>= int())
+        .def (-py::self)
+        .def (py::self + py::self)
+        .def (py::self - py::self)
+        .def (py::self * py::self)
+        .def (py::self / py::self)
+        .def (py::self | py::self)
+        .def (py::self & py::self)
+        .def (py::self ^ py::self)
+        .def (py::self % py::self)
+        .def (py::self << int())
+        .def (py::self >> int())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (py::self < py::self)
+        .def (py::self <= py::self)
+        .def (py::self > py::self)
+        .def (py::self >= py::self)
+        .def ("compare", &BigInteger::compare)
+        .def ("compareAbsolute", &BigInteger::compareAbsolute)
+        .def ("divideBy", &BigInteger::divideBy)
+        .def ("findGreatestCommonDivisor", &BigInteger::findGreatestCommonDivisor)
+        .def ("exponentModulo", &BigInteger::exponentModulo)
+        .def ("inverseModulo", &BigInteger::inverseModulo)
+        .def ("montgomeryMultiplication", &BigInteger::montgomeryMultiplication)
+        .def ("extendedEuclidean", &BigInteger::extendedEuclidean)
+        .def ("toString", &BigInteger::toString)
+        .def ("parseString", &BigInteger::parseString)
+        .def ("toMemoryBlock", &BigInteger::toMemoryBlock)
+        .def ("loadFromMemoryBlock", &BigInteger::loadFromMemoryBlock)
+    ;
+
+    // ============================================================================================ juce::String
+
+    py::class_<String> classString (m, "String");
+    classString
+        .def (py::init<>())
+        .def_static ("fromUTF8", [](const char* const buffer) { return String::fromUTF8(buffer); })
+        .def_static ("fromUTF8", [](const char* const buffer, int bufferSizeBytes) { return String::fromUTF8(buffer, bufferSizeBytes); })
     ;
 
     // ============================================================================================ juce::Base64
@@ -467,6 +655,10 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("secondsToHighResolutionTicks", &Time::secondsToHighResolutionTicks)
         .def_static ("getCompilationDate", &Time::getCompilationDate)
     ;
+
+    // ============================================================================================ juce::Range<>
+
+    registerRange<Range, int, float>(m);
 
     // ============================================================================================ juce::MemoryBlock
 
@@ -725,6 +917,28 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("waitForProcessToFinish", &ChildProcess::waitForProcessToFinish)
         .def ("getExitCode", &ChildProcess::getExitCode)
         .def ("kill", &ChildProcess::kill)
+    ;
+
+    // ============================================================================================ juce::Random
+
+    py::class_<Random> classRandom (m, "Random");
+    classRandom
+        .def (py::init<>())
+        .def (py::init<int64>())
+        .def ("nextInt", py::overload_cast<> (&Random::nextInt))
+        .def ("nextInt", py::overload_cast<int> (&Random::nextInt))
+        .def ("nextInt", py::overload_cast<Range<int>> (&Random::nextInt))
+        .def ("nextInt64", &Random::nextInt64)
+        .def ("nextFloat", &Random::nextFloat)
+        .def ("nextDouble", &Random::nextDouble)
+        .def ("nextBool", &Random::nextBool)
+    //.def ("nextLargeNumber", &Random::nextLargeNumber)
+    //.def ("fillBitsRandomly", py::overload_cast<BigInteger&, int, int> (&Random::fillBitsRandomly))
+        .def ("setSeed", &Random::setSeed)
+        .def ("getSeed", &Random::getSeed)
+        .def ("combineSeed", &Random::combineSeed)
+        .def ("setSeedRandomly", &Random::setSeedRandomly)
+        .def_static ("getSystemRandom", &Random::getSystemRandom, py::return_value_policy::reference)
     ;
 
     // ============================================================================================ juce::PropertySet

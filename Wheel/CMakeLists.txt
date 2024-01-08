@@ -67,32 +67,34 @@ target_compile_definitions (${PROJECT_NAME} PRIVATE
     JUCE_STANDALONE_APPLICATION=1
     JUCE_DISPLAY_SPLASH_SCREEN=0
     JUCE_MODAL_LOOPS_PERMITTED=1
+    JUCE_CATCH_UNHANDLED_EXCEPTIONS=1
+    JUCE_LOG_ASSERTIONS=1
+    JUCE_ALLOW_STATIC_NULL_VARIABLES=0
+    JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_WEB_BROWSER=0
     JUCE_LOAD_CURL_SYMBOLS_LAZILY=1
-    JUCE_ALLOW_STATIC_NULL_VARIABLES=0
-    JUCE_LOG_ASSERTIONS=1
-    JUCE_STRICT_REFCOUNTEDPOINTER=1
     JUCE_SILENCE_XCODE_15_LINKER_WARNING=1
-    JUCE_PYTHON_EMBEDDED_INTERPRETER=0)
+    JUCE_PYTHON_EMBEDDED_INTERPRETER=0
+    PYBIND11_DETAILED_ERROR_MESSAGES=1)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE
-    juce::juce_analytics
-    juce::juce_audio_basics
-    juce::juce_audio_devices
-    juce::juce_audio_formats
-    juce::juce_audio_processors
-    juce::juce_audio_utils
+    #juce::juce_analytics
+    #juce::juce_audio_basics
+    #juce::juce_audio_devices
+    #juce::juce_audio_formats
+    #juce::juce_audio_processors
+    #juce::juce_audio_utils
     juce::juce_core
     juce::juce_cryptography
     juce::juce_data_structures
-    juce::juce_dsp
+    #juce::juce_dsp
     juce::juce_events
     juce::juce_graphics
     juce::juce_gui_basics
-    juce::juce_gui_extra
-    juce::juce_opengl
-    juce::juce_osc
-    juce::juce_video
+    #juce::juce_gui_extra
+    #juce::juce_opengl
+    #juce::juce_osc
+    #juce::juce_video
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
     straw::juce_python

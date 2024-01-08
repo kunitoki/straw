@@ -25,22 +25,6 @@ void registerJuceEventsBindings (pybind11::module_& m)
 
     namespace py = pybind11;
 
-    // ============================================================================================ juce::JUCEApplicationBase
-
-    py::class_<JUCEApplicationBase> classJUCEApplicationBase (m, "JUCEApplicationBase");
-    classJUCEApplicationBase
-        .def ("getApplicationName", &JUCEApplicationBase::getApplicationName)
-        .def ("getApplicationVersion", &JUCEApplicationBase::getApplicationVersion)
-        .def ("moreThanOneInstanceAllowed", &JUCEApplicationBase::moreThanOneInstanceAllowed)
-        .def_static ("quit", &JUCEApplicationBase::quit)
-        .def_static ("getCommandLineParameterArray", &JUCEApplicationBase::getCommandLineParameterArray)
-        .def_static ("getCommandLineParameters", &JUCEApplicationBase::getCommandLineParameters)
-        .def ("setApplicationReturnValue", &JUCEApplicationBase::setApplicationReturnValue)
-        .def ("getApplicationReturnValue", &JUCEApplicationBase::getApplicationReturnValue)
-        .def_static ("isStandaloneApp", &JUCEApplicationBase::isStandaloneApp)
-        .def ("isInitialising", &JUCEApplicationBase::isInitialising)
-    ;
-
     // ============================================================================================ juce::ActionListener
 
     struct PyActionListener : public ActionListener
@@ -92,8 +76,8 @@ void registerJuceEventsBindings (pybind11::module_& m)
 
     py::class_<MessageManager> classMessageManager (m, "MessageManager");
     classMessageManager
-        .def_static ("getInstance", &MessageManager::getInstance)
-        .def_static ("getInstanceWithoutCreating", &MessageManager::getInstanceWithoutCreating)
+        .def_static ("getInstance", &MessageManager::getInstance, py::return_value_policy::reference)
+        .def_static ("getInstanceWithoutCreating", &MessageManager::getInstanceWithoutCreating, py::return_value_policy::reference)
         .def_static ("deleteInstance", &MessageManager::deleteInstance)
         .def ("runDispatchLoop", &MessageManager::runDispatchLoop)
         .def ("stopDispatchLoop", &MessageManager::stopDispatchLoop)

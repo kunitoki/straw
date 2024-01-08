@@ -50,3 +50,4 @@
 #include "bindings/ScriptJuceGraphicsBindings.h"
 #include "bindings/ScriptJuceGuiBasicsBindings.h"
 #include "utilities/ClassDemangling.h"
+#include "utilities/PythonInterop.h"

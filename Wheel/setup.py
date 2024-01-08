@@ -3,6 +3,7 @@ import sys
 import pathlib
 import platform
 import glob
+import shutil
 import setuptools
 
 from distutils import sysconfig
@@ -37,6 +38,8 @@ class BuildExtension(build_ext):
         extdir.mkdir(parents=True, exist_ok=True)
 
         output_path = extdir.parent
+        output_path.mkdir(parents=True, exist_ok=True)
+
         config = "Debug" if self.debug else "Release"
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={output_path}",
@@ -56,6 +59,9 @@ class BuildExtension(build_ext):
                 build_command += ["--", f"-j{os.cpu_count()}"]
             self.spawn(build_command)
 
+            for f in glob.iglob(f"{project_name}_artefacts/**/*.so"):
+                shutil.copy(f, output_path / f"{project_name}.so")
+
         finally:
             os.chdir(str(cwd))
 
@@ -64,7 +70,6 @@ class BuildExtension(build_ext):
         if 'LIBPL' in vars and 'LIBRARY' in vars:
             path = os.path.join(vars['LIBPL'], vars['LIBRARY'])
             if os.path.exists(path):
-                print(path)
                 return path
 
         if 'SCRIPTDIR' in vars:

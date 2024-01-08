@@ -27,19 +27,6 @@ namespace detail {
 //=================================================================================================
 
 template <>
-struct type_caster<juce::String>
-{
-public:
-    PYBIND11_TYPE_CASTER (juce::String, const_name ("String"));
-
-    bool load (handle src, bool convert);
-
-    static handle cast (const juce::String& src, return_value_policy policy, handle parent);
-};
-
-//=================================================================================================
-
-template <>
 struct type_caster<juce::StringRef>
 {
 public:
@@ -48,6 +35,25 @@ public:
     bool load (handle src, bool convert);
 
     static handle cast (const juce::StringRef& src, return_value_policy policy, handle parent);
+
+private:
+    bool load_raw (handle src);
+};
+
+//=================================================================================================
+
+template <>
+struct type_caster<juce::String>
+{
+public:
+    PYBIND11_TYPE_CASTER (juce::String, const_name ("String"));
+
+    bool load (handle src, bool convert);
+
+    static handle cast (const juce::String& src, return_value_policy policy, handle parent);
+
+private:
+    bool load_raw (handle src);
 };
 
 //=================================================================================================
