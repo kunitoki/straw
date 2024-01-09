@@ -113,8 +113,10 @@ public:
 template <class T>
 struct type_caster<juce::Array<T>>
 {
+    using value_conv = make_caster<T>;
+
 public:
-    PYBIND11_TYPE_CASTER (juce::Array<T>, const_name ("Array[]"));
+    PYBIND11_TYPE_CASTER (juce::Array<T>, const_name("Array[") + value_conv::name + const_name("]"));
 
     bool load (handle src, bool convert)
     {

@@ -212,6 +212,8 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             //PYBIND11_OVERRIDE (void, JUCEApplication, unhandledException, ex, sourceFilename, lineNumber);
 
+            ignoreUnused (ex);
+
             {
                 py::gil_scoped_acquire gil;
 
@@ -266,6 +268,425 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getApplicationReturnValue", &JUCEApplication::getApplicationReturnValue)
         .def_static ("isStandaloneApp", &JUCEApplication::isStandaloneApp)
         .def ("isInitialising", &JUCEApplication::isInitialising)
+    ;
+
+    // ============================================================================================ juce::MouseInputSource
+
+    py::class_<ModifierKeys> classModifierKeys (m, "ModifierKeys");
+
+    py::enum_<ModifierKeys::Flags> (classModifierKeys, "Flags")
+        .value("noModifiers", ModifierKeys::Flags::noModifiers)
+        .value("shiftModifier", ModifierKeys::Flags::shiftModifier)
+        .value("ctrlModifier", ModifierKeys::Flags::ctrlModifier)
+        .value("altModifier", ModifierKeys::Flags::altModifier)
+        .value("leftButtonModifier", ModifierKeys::Flags::leftButtonModifier)
+        .value("rightButtonModifier", ModifierKeys::Flags::rightButtonModifier)
+        .value("middleButtonModifier", ModifierKeys::Flags::middleButtonModifier)
+        .value("commandModifier", ModifierKeys::Flags::commandModifier)
+        .value("popupMenuClickModifier", ModifierKeys::Flags::popupMenuClickModifier)
+        .value("allKeyboardModifiers", ModifierKeys::Flags::allKeyboardModifiers)
+        .value("allMouseButtonModifiers", ModifierKeys::Flags::allMouseButtonModifiers)
+        .value("ctrlAltCommandModifiers", ModifierKeys::Flags::ctrlAltCommandModifiers)
+        .export_values();
+
+    classModifierKeys
+        .def (py::init<>())
+        .def (py::init<int>())
+        .def ("isCommandDown", &ModifierKeys::isCommandDown)
+        .def ("isPopupMenu", &ModifierKeys::isPopupMenu)
+        .def ("isLeftButtonDown", &ModifierKeys::isLeftButtonDown)
+        .def ("isRightButtonDown", &ModifierKeys::isRightButtonDown)
+        .def ("isMiddleButtonDown", &ModifierKeys::isMiddleButtonDown)
+        .def ("isAnyMouseButtonDown", &ModifierKeys::isAnyMouseButtonDown)
+        .def ("isAnyModifierKeyDown", &ModifierKeys::isAnyModifierKeyDown)
+        .def ("isShiftDown", &ModifierKeys::isShiftDown)
+        .def ("isCtrlDown", &ModifierKeys::isCtrlDown)
+        .def ("isAltDown", &ModifierKeys::isAltDown)
+        .def_property_readonly_static ("noModifiers", [] { return ModifierKeys::noModifiers; })
+        .def_property_readonly_static ("shiftModifier", [] { return ModifierKeys::shiftModifier; })
+        .def_property_readonly_static ("ctrlModifier", [] { return ModifierKeys::ctrlModifier; })
+        .def_property_readonly_static ("altModifier", [] { return ModifierKeys::altModifier; })
+        .def_property_readonly_static ("leftButtonModifier", [] { return ModifierKeys::leftButtonModifier; })
+        .def_property_readonly_static ("rightButtonModifier", [] { return ModifierKeys::rightButtonModifier; })
+        .def_property_readonly_static ("middleButtonModifier", [] { return ModifierKeys::middleButtonModifier; })
+        .def_property_readonly_static ("commandModifier", [] { return ModifierKeys::commandModifier; })
+        .def_property_readonly_static ("popupMenuClickModifier", [] { return ModifierKeys::popupMenuClickModifier; })
+        .def_property_readonly_static ("allKeyboardModifiers", [] { return ModifierKeys::allKeyboardModifiers; })
+        .def_property_readonly_static ("allMouseButtonModifiers", [] { return ModifierKeys::allMouseButtonModifiers; })
+        .def_property_readonly_static ("ctrlAltCommandModifiers", [] { return ModifierKeys::ctrlAltCommandModifiers; })
+        .def ("withOnlyMouseButtons", &ModifierKeys::withOnlyMouseButtons)
+        .def ("withoutMouseButtons", &ModifierKeys::withoutMouseButtons)
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def ("getRawFlags", &ModifierKeys::getRawFlags)
+        .def ("withoutFlags", &ModifierKeys::withoutFlags)
+        .def ("withFlags", &ModifierKeys::withFlags)
+        .def ("testFlags", &ModifierKeys::testFlags)
+        .def ("getNumMouseButtonsDown", &ModifierKeys::getNumMouseButtonsDown)
+        .def_property_readonly_static ("currentModifiers", [] { return ModifierKeys::currentModifiers; })
+        .def_static ("getCurrentModifiers", &ModifierKeys::getCurrentModifiers)
+        .def_static ("getCurrentModifiersRealtime", &ModifierKeys::getCurrentModifiersRealtime)
+    ;
+
+    // ============================================================================================ juce::MouseInputSource
+    
+    py::class_<MouseInputSource> classMouseInputSource (m, "MouseInputSource");
+
+    py::enum_<MouseInputSource::InputSourceType> (classMouseInputSource, "InputSourceType")
+        .value("mouse", MouseInputSource::InputSourceType::mouse)
+        .value("touch", MouseInputSource::InputSourceType::touch)
+        .value("pen", MouseInputSource::InputSourceType::pen)
+        .export_values();
+
+    classMouseInputSource
+        .def_property_readonly_static ("mouse", [] { return MouseInputSource::mouse; })
+        .def_property_readonly_static ("touch", [] { return MouseInputSource::touch; })
+        .def_property_readonly_static ("pen", [] { return MouseInputSource::pen; })
+        .def ("getType", &MouseInputSource::getType)
+        .def ("isMouse", &MouseInputSource::isMouse)
+        .def ("isTouch", &MouseInputSource::isTouch)
+        .def ("isPen", &MouseInputSource::isPen)
+        .def ("canHover", &MouseInputSource::canHover)
+        .def ("hasMouseWheel", &MouseInputSource::hasMouseWheel)
+        .def ("getIndex", &MouseInputSource::getIndex)
+        .def ("isDragging", &MouseInputSource::isDragging)
+        .def ("getScreenPosition", &MouseInputSource::getScreenPosition)
+        .def ("getRawScreenPosition", &MouseInputSource::getRawScreenPosition)
+        .def ("getCurrentModifiers", &MouseInputSource::getCurrentModifiers)
+        .def ("getCurrentPressure", &MouseInputSource::getCurrentPressure)
+        .def ("getCurrentOrientation", &MouseInputSource::getCurrentOrientation)
+        .def ("getCurrentRotation", &MouseInputSource::getCurrentRotation)
+        .def ("getCurrentTilt", &MouseInputSource::getCurrentTilt)
+        .def ("isPressureValid", &MouseInputSource::isPressureValid)
+        .def ("isOrientationValid", &MouseInputSource::isOrientationValid)
+        .def ("isRotationValid", &MouseInputSource::isRotationValid)
+        .def ("isTiltValid", &MouseInputSource::isTiltValid)
+        .def ("getComponentUnderMouse", &MouseInputSource::getComponentUnderMouse, py::return_value_policy::reference)
+        .def ("triggerFakeMove", &MouseInputSource::triggerFakeMove)
+        .def ("getNumberOfMultipleClicks", &MouseInputSource::getNumberOfMultipleClicks)
+        .def ("getLastMouseDownTime", &MouseInputSource::getLastMouseDownTime)
+        .def ("getLastMouseDownPosition", &MouseInputSource::getLastMouseDownPosition)
+        .def ("isLongPressOrDrag", &MouseInputSource::isLongPressOrDrag)
+        .def ("hasMovedSignificantlySincePressed", &MouseInputSource::hasMovedSignificantlySincePressed)
+        .def ("hasMouseCursor", &MouseInputSource::hasMouseCursor)
+        .def ("showMouseCursor", &MouseInputSource::showMouseCursor)
+        .def ("hideCursor", &MouseInputSource::hideCursor)
+        .def ("revealCursor", &MouseInputSource::revealCursor)
+        .def ("forceMouseCursorUpdate", &MouseInputSource::forceMouseCursorUpdate)
+        .def ("canDoUnboundedMovement", &MouseInputSource::canDoUnboundedMovement)
+        .def ("enableUnboundedMouseMovement", &MouseInputSource::enableUnboundedMouseMovement)
+        .def ("isUnboundedMouseMovementEnabled", &MouseInputSource::isUnboundedMouseMovementEnabled)
+        .def ("setScreenPosition", &MouseInputSource::setScreenPosition)
+        .def_property_readonly_static ("defaultPressure", [] { return MouseInputSource::defaultPressure; })
+        .def_property_readonly_static ("defaultOrientation", [] { return MouseInputSource::defaultOrientation; })
+        .def_property_readonly_static ("defaultRotation", [] { return MouseInputSource::defaultRotation; })
+        .def_property_readonly_static ("defaultTiltX", [] { return MouseInputSource::defaultTiltX; })
+        .def_property_readonly_static ("defaultTiltY", [] { return MouseInputSource::defaultTiltY; })
+        .def_property_readonly_static ("offscreenMousePos", [] { return MouseInputSource::offscreenMousePos; })
+    ;
+
+    // ============================================================================================ juce::MouseEvent
+
+    py::class_<MouseEvent> classMouseEvent (m, "MouseEvent");    
+    classMouseEvent
+        .def (py::init<MouseInputSource, Point<float>, ModifierKeys, float, float, float, float, float, Component*, Component*, Time, Point<float>, Time, int, bool>())
+        .def_readonly ("position", &MouseEvent::position)
+        .def_readonly ("x", &MouseEvent::x)
+        .def_readonly ("y", &MouseEvent::y)
+        .def_readonly ("mods", &MouseEvent::mods)
+        .def_readonly ("pressure", &MouseEvent::pressure)
+        .def_readonly ("orientation", &MouseEvent::orientation)
+        .def_readonly ("rotation", &MouseEvent::rotation)
+        .def_readonly ("tiltX", &MouseEvent::tiltX)
+        .def_readonly ("tiltY", &MouseEvent::tiltY)
+        .def_readonly ("mouseDownPosition", &MouseEvent::mouseDownPosition)
+        .def_readonly ("eventComponent", &MouseEvent::eventComponent, py::return_value_policy::reference)
+        .def_readonly ("originalComponent", &MouseEvent::originalComponent, py::return_value_policy::reference)
+        .def_readonly ("eventTime", &MouseEvent::eventTime)
+        .def_readonly ("mouseDownTime", &MouseEvent::mouseDownTime)
+        .def_readonly ("source", &MouseEvent::source)
+        .def ("getMouseDownX", &MouseEvent::getMouseDownX)
+        .def ("getMouseDownY", &MouseEvent::getMouseDownY)
+        .def ("getMouseDownPosition", &MouseEvent::getMouseDownPosition)
+        .def ("getDistanceFromDragStart", &MouseEvent::getDistanceFromDragStart)
+        .def ("getDistanceFromDragStartX", &MouseEvent::getDistanceFromDragStartX)
+        .def ("getDistanceFromDragStartY", &MouseEvent::getDistanceFromDragStartY)
+        .def ("getOffsetFromDragStart", &MouseEvent::getOffsetFromDragStart)
+        .def ("mouseWasDraggedSinceMouseDown", &MouseEvent::mouseWasDraggedSinceMouseDown)
+        .def ("mouseWasClicked", &MouseEvent::mouseWasClicked)
+        .def ("getNumberOfClicks", &MouseEvent::getNumberOfClicks)
+        .def ("getLengthOfMousePress", &MouseEvent::getLengthOfMousePress)
+        .def ("isPressureValid", &MouseEvent::isPressureValid)
+        .def ("isOrientationValid", &MouseEvent::isOrientationValid)
+        .def ("isRotationValid", &MouseEvent::isRotationValid)
+        .def ("isTiltValid", &MouseEvent::isTiltValid)
+        .def ("getPosition", &MouseEvent::getPosition)
+        .def ("getScreenX", &MouseEvent::getScreenX)
+        .def ("getScreenY", &MouseEvent::getScreenY)
+        .def ("getScreenPosition", &MouseEvent::getScreenPosition)
+        .def ("getMouseDownScreenX", &MouseEvent::getMouseDownScreenX)
+        .def ("getMouseDownScreenY", &MouseEvent::getMouseDownScreenY)
+        .def ("getMouseDownScreenPosition", &MouseEvent::getMouseDownScreenPosition)
+        .def ("getEventRelativeTo", &MouseEvent::getEventRelativeTo)
+        .def ("withNewPosition", py::overload_cast<Point<float>> (&MouseEvent::withNewPosition, py::const_))
+        .def ("withNewPosition", py::overload_cast<Point<int>> (&MouseEvent::withNewPosition, py::const_))
+        .def_static ("setDoubleClickTimeout", &MouseEvent::setDoubleClickTimeout)
+        .def_static ("getDoubleClickTimeout", &MouseEvent::getDoubleClickTimeout)
+    ;
+
+    py::class_<MouseWheelDetails> classMouseWheelDetails (m, "MouseWheelDetails");    
+    classMouseWheelDetails
+        .def (py::init<>())
+        .def_readwrite ("deltaX", &MouseWheelDetails::deltaX)
+        .def_readwrite ("deltaY", &MouseWheelDetails::deltaY)
+        .def_readwrite ("isReversed", &MouseWheelDetails::isReversed)
+        .def_readwrite ("isSmooth", &MouseWheelDetails::isSmooth)
+        .def_readwrite ("isInertial", &MouseWheelDetails::isInertial)
+    ;
+
+    py::class_<PenDetails> classPenDetails (m, "PenDetails");    
+    classPenDetails
+        .def (py::init<>())
+        .def_readwrite ("rotation", &PenDetails::rotation)
+        .def_readwrite ("tiltX", &PenDetails::tiltX)
+        .def_readwrite ("tiltY", &PenDetails::tiltY)
+    ;
+
+    // ============================================================================================ juce::MouseListener
+    
+    class PyMouseListener : public MouseListener
+    {
+        using MouseListener::MouseListener;
+    
+        void mouseMove (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseMove, event);
+        }
+
+        void mouseEnter (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseEnter, event);
+        }
+
+        void mouseExit (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseExit, event);
+        }
+
+        void mouseDown (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseDown, event);
+        }
+
+        void mouseDrag (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseDrag, event);
+        }
+
+        void mouseUp (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseUp, event);
+        }
+
+        void mouseDoubleClick (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseDoubleClick, event);
+        }
+
+        void mouseWheelMove (const MouseEvent& event, const MouseWheelDetails& wheel) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseWheelMove, event, wheel);
+        }
+
+        void mouseMagnify (const MouseEvent& event, float scaleFactor) override
+        {
+            PYBIND11_OVERRIDE (void, MouseListener, mouseMagnify, event, scaleFactor);
+        }
+    };
+    
+    py::class_<MouseListener, PyMouseListener> classMouseListener (m, "MouseListener");
+
+    classMouseListener
+        .def (py::init<>())
+        .def ("mouseMove", &MouseListener::mouseMove)
+        .def ("mouseEnter", &MouseListener::mouseEnter)
+        .def ("mouseExit", &MouseListener::mouseExit)
+        .def ("mouseDown", &MouseListener::mouseDown)
+        .def ("mouseDrag", &MouseListener::mouseDrag)
+        .def ("mouseUp", &MouseListener::mouseUp)
+        .def ("mouseDoubleClick", &MouseListener::mouseDoubleClick)
+        .def ("mouseWheelMove", &MouseListener::mouseWheelMove)
+        .def ("mouseMagnify", &MouseListener::mouseMagnify)
+    ;
+
+    // ============================================================================================ juce::MouseCursor
+    
+    py::class_<MouseCursor> classMouseCursor (m, "MouseCursor");
+
+    py::enum_<MouseCursor::StandardCursorType> (classMouseCursor, "StandardCursorType")
+        .value("ParentCursor", MouseCursor::StandardCursorType::ParentCursor)
+        .value("NoCursor", MouseCursor::StandardCursorType::NoCursor)
+        .value("NormalCursor", MouseCursor::StandardCursorType::NormalCursor)
+        .value("WaitCursor", MouseCursor::StandardCursorType::WaitCursor)
+        .value("IBeamCursor", MouseCursor::StandardCursorType::IBeamCursor)
+        .value("CrosshairCursor", MouseCursor::StandardCursorType::CrosshairCursor)
+        .value("CopyingCursor", MouseCursor::StandardCursorType::CopyingCursor)
+        .value("PointingHandCursor", MouseCursor::StandardCursorType::PointingHandCursor)
+        .value("DraggingHandCursor", MouseCursor::StandardCursorType::DraggingHandCursor)
+        .value("LeftRightResizeCursor", MouseCursor::StandardCursorType::LeftRightResizeCursor)
+        .value("UpDownResizeCursor", MouseCursor::StandardCursorType::UpDownResizeCursor)
+        .value("UpDownLeftRightResizeCursor", MouseCursor::StandardCursorType::UpDownLeftRightResizeCursor)
+        .value("TopEdgeResizeCursor", MouseCursor::StandardCursorType::TopEdgeResizeCursor)
+        .value("BottomEdgeResizeCursor", MouseCursor::StandardCursorType::BottomEdgeResizeCursor)
+        .value("LeftEdgeResizeCursor", MouseCursor::StandardCursorType::LeftEdgeResizeCursor)
+        .value("RightEdgeResizeCursor", MouseCursor::StandardCursorType::RightEdgeResizeCursor)
+        .value("TopLeftCornerResizeCursor", MouseCursor::StandardCursorType::TopLeftCornerResizeCursor)
+        .value("TopRightCornerResizeCursor", MouseCursor::StandardCursorType::TopRightCornerResizeCursor)
+        .value("BottomLeftCornerResizeCursor", MouseCursor::StandardCursorType::BottomLeftCornerResizeCursor)
+        .value("BottomRightCornerResizeCursor", MouseCursor::StandardCursorType::BottomRightCornerResizeCursor)
+        .value("NumStandardCursorTypes", MouseCursor::StandardCursorType::NumStandardCursorTypes)
+        .export_values();
+
+    classMouseCursor
+        .def (py::init<>())
+        .def (py::init<MouseCursor::StandardCursorType>())
+        .def (py::init<const Image&, int, int>())
+        .def (py::init<const Image&, int, int, float>())
+    //.def (py::init<const ScaledImage&, Point<int>>())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def (py::self == MouseCursor::StandardCursorType())
+        .def (py::self != MouseCursor::StandardCursorType())
+        .def_property_readonly_static ("ParentCursor", [] { return MouseCursor::ParentCursor; })
+        .def_property_readonly_static ("NoCursor", [] { return MouseCursor::NoCursor; })
+        .def_property_readonly_static ("NormalCursor", [] { return MouseCursor::NormalCursor; })
+        .def_property_readonly_static ("WaitCursor", [] { return MouseCursor::WaitCursor; })
+        .def_property_readonly_static ("IBeamCursor", [] { return MouseCursor::IBeamCursor; })
+        .def_property_readonly_static ("CrosshairCursor", [] { return MouseCursor::CrosshairCursor; })
+        .def_property_readonly_static ("CopyingCursor", [] { return MouseCursor::CopyingCursor; })
+        .def_property_readonly_static ("PointingHandCursor", [] { return MouseCursor::PointingHandCursor; })
+        .def_property_readonly_static ("DraggingHandCursor", [] { return MouseCursor::DraggingHandCursor; })
+        .def_property_readonly_static ("LeftRightResizeCursor", [] { return MouseCursor::LeftRightResizeCursor; })
+        .def_property_readonly_static ("UpDownResizeCursor", [] { return MouseCursor::UpDownResizeCursor; })
+        .def_property_readonly_static ("UpDownLeftRightResizeCursor", [] { return MouseCursor::UpDownLeftRightResizeCursor; })
+        .def_property_readonly_static ("TopEdgeResizeCursor", [] { return MouseCursor::TopEdgeResizeCursor; })
+        .def_property_readonly_static ("BottomEdgeResizeCursor", [] { return MouseCursor::BottomEdgeResizeCursor; })
+        .def_property_readonly_static ("LeftEdgeResizeCursor", [] { return MouseCursor::LeftEdgeResizeCursor; })
+        .def_property_readonly_static ("RightEdgeResizeCursor", [] { return MouseCursor::RightEdgeResizeCursor; })
+        .def_property_readonly_static ("TopLeftCornerResizeCursor", [] { return MouseCursor::TopLeftCornerResizeCursor; })
+        .def_property_readonly_static ("TopRightCornerResizeCursor", [] { return MouseCursor::TopRightCornerResizeCursor; })
+        .def_property_readonly_static ("BottomLeftCornerResizeCursor", [] { return MouseCursor::BottomLeftCornerResizeCursor; })
+        .def_property_readonly_static ("BottomRightCornerResizeCursor", [] { return MouseCursor::BottomRightCornerResizeCursor; })
+        .def_property_readonly_static ("NumStandardCursorTypes", [] { return MouseCursor::NumStandardCursorTypes; })
+        .def_static ("showWaitCursor", &MouseCursor::showWaitCursor)
+        .def_static ("hideWaitCursor", &MouseCursor::hideWaitCursor)
+    ;
+
+    // ============================================================================================ juce::Desktop
+
+    py::class_<Displays> classDisplays (m, "Displays");
+    classDisplays
+        .def ("physicalToLogical", static_cast<Rectangle<int> (Displays::*)(Rectangle<int>, const Displays::Display*) const> (&Displays::physicalToLogical))
+        .def ("physicalToLogical", static_cast<Rectangle<float> (Displays::*)(Rectangle<float>, const Displays::Display*) const> (&Displays::physicalToLogical))
+        .def ("physicalToLogical", py::overload_cast<Point<int>, const Displays::Display*> (&Displays::template physicalToLogical<int>, py::const_))
+        .def ("physicalToLogical", py::overload_cast<Point<float>, const Displays::Display*> (&Displays::template physicalToLogical<float>, py::const_))
+        .def ("logicalToPhysical", static_cast<Rectangle<int> (Displays::*)(Rectangle<int>, const Displays::Display*) const> (&Displays::logicalToPhysical))
+        .def ("logicalToPhysical", static_cast<Rectangle<float> (Displays::*)(Rectangle<float>, const Displays::Display*) const> (&Displays::logicalToPhysical))
+        .def ("logicalToPhysical", py::overload_cast<Point<int>, const Displays::Display*> (&Displays::template logicalToPhysical<int>, py::const_))
+        .def ("logicalToPhysical", py::overload_cast<Point<float>, const Displays::Display*> (&Displays::template logicalToPhysical<float>, py::const_))
+        .def ("getDisplayForRect", &Displays::getDisplayForRect, py::return_value_policy::reference)
+        .def ("getDisplayForPoint", &Displays::getDisplayForPoint, py::return_value_policy::reference)
+        .def ("getPrimaryDisplay", &Displays::getPrimaryDisplay, py::return_value_policy::reference)
+        .def ("getRectangleList", &Displays::getRectangleList)
+        .def ("getTotalBounds", &Displays::getTotalBounds)
+        .def ("refresh", &Displays::refresh)
+    ;
+
+    py::class_<Displays::Display> classDisplay (classDisplays, "Display");
+    classDisplay
+        .def_readwrite ("isMain", &Displays::Display::isMain)
+        .def_readwrite ("totalArea", &Displays::Display::totalArea)
+        .def_readwrite ("userArea", &Displays::Display::userArea)
+        .def_readwrite ("safeAreaInsets", &Displays::Display::safeAreaInsets)
+        .def_readwrite ("keyboardInsets", &Displays::Display::keyboardInsets)
+        .def_readwrite ("topLeftPhysical", &Displays::Display::topLeftPhysical)
+        .def_readwrite ("scale", &Displays::Display::scale)
+        .def_readwrite ("dpi", &Displays::Display::dpi)
+        .def_readwrite ("verticalFrequencyHz", &Displays::Display::verticalFrequencyHz)
+    ;
+
+    // ============================================================================================ juce::Desktop
+
+    py::class_<Desktop, std::unique_ptr<Desktop, py::nodelete>> classDesktop (m, "Desktop");
+
+    py::enum_<Desktop::DisplayOrientation> (classDesktop, "DisplayOrientation")
+        .value("upright", Desktop::upright)
+        .value("upsideDown", Desktop::upsideDown)
+        .value("rotatedClockwise", Desktop::rotatedClockwise)
+        .value("rotatedAntiClockwise", Desktop::rotatedAntiClockwise)
+        .value("allOrientations", Desktop::allOrientations)
+        .export_values();
+
+    classDesktop
+        .def_static ("getInstance", &Desktop::getInstance, py::return_value_policy::reference)
+        .def_static ("getMousePosition", &Desktop::getMousePosition)
+        .def_static ("setMousePosition", &Desktop::setMousePosition)
+        .def_static ("getLastMouseDownPosition", &Desktop::getLastMouseDownPosition)
+        .def ("getMouseButtonClickCounter", &Desktop::getMouseButtonClickCounter)
+        .def ("getMouseWheelMoveCounter", &Desktop::getMouseWheelMoveCounter)
+        .def_static ("setScreenSaverEnabled", &Desktop::setScreenSaverEnabled)
+        .def_static ("isScreenSaverEnabled", &Desktop::isScreenSaverEnabled)
+        .def ("addGlobalMouseListener", &Desktop::addGlobalMouseListener)
+        .def ("removeGlobalMouseListener", &Desktop::removeGlobalMouseListener)
+        .def ("addFocusChangeListener", &Desktop::addFocusChangeListener)
+        .def ("removeFocusChangeListener", &Desktop::removeFocusChangeListener)
+        .def ("addDarkModeSettingListener", &Desktop::addDarkModeSettingListener)
+        .def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
+        .def ("isDarkModeActive", &Desktop::isDarkModeActive)
+        .def ("setKioskModeComponent", &Desktop::setKioskModeComponent)
+        .def ("getKioskModeComponent", &Desktop::getKioskModeComponent)        
+        .def ("getNumComponents", &Desktop::getNumComponents)
+        .def ("getComponent", &Desktop::getComponent, py::return_value_policy::reference)
+        .def ("findComponentAt", &Desktop::findComponentAt, py::return_value_policy::reference)
+        .def ("getAnimator", &Desktop::getAnimator, py::return_value_policy::reference)
+        .def ("getDefaultLookAndFeel", &Desktop::getDefaultLookAndFeel, py::return_value_policy::reference)
+        .def ("setDefaultLookAndFeel", &Desktop::setDefaultLookAndFeel)
+    //.def ("getMouseSources", &Desktop::getMouseSources)
+        .def ("getNumMouseSources", &Desktop::getNumMouseSources)
+        .def ("getMouseSource", &Desktop::getMouseSource, py::return_value_policy::reference)
+        .def ("getMainMouseSource", &Desktop::getMainMouseSource)
+        .def ("getNumDraggingMouseSources", &Desktop::getNumDraggingMouseSources)
+        .def ("getDraggingMouseSource", &Desktop::getDraggingMouseSource, py::return_value_policy::reference)
+        .def ("beginDragAutoRepeat", &Desktop::beginDragAutoRepeat)
+        .def_property_readonly_static ("upright", [] { return Desktop::upright; })
+        .def_property_readonly_static ("upsideDown", [] { return Desktop::upsideDown; })
+        .def_property_readonly_static ("rotatedClockwise", [] { return Desktop::rotatedClockwise; })
+        .def_property_readonly_static ("rotatedAntiClockwise", [] { return Desktop::rotatedAntiClockwise; })
+        .def_property_readonly_static ("allOrientations", [] { return Desktop::allOrientations; })
+        .def ("getCurrentOrientation", &Desktop::getCurrentOrientation)
+        .def ("setOrientationsEnabled", &Desktop::setOrientationsEnabled)
+        .def ("getOrientationsEnabled", &Desktop::getOrientationsEnabled)
+        .def ("isOrientationEnabled", &Desktop::isOrientationEnabled)
+        .def ("getDisplays", &Desktop::getDisplays)
+        .def ("setGlobalScaleFactor", &Desktop::setGlobalScaleFactor)
+        .def ("getGlobalScaleFactor", &Desktop::getGlobalScaleFactor)
+        .def_static ("canUseSemiTransparentWindows", &Desktop::canUseSemiTransparentWindows)
+        .def ("isHeadless", &Desktop::isHeadless)
+    ;
+
+    // ============================================================================================ juce::Desktop
+
+    py::class_<ComponentAnimator> classComponentAnimator (m, "ComponentAnimator");
+    classComponentAnimator
+        .def (py::init<>())
+        .def ("animateComponent", &ComponentAnimator::animateComponent)
+        .def ("fadeOut", &ComponentAnimator::fadeOut)
+        .def ("fadeIn", &ComponentAnimator::fadeIn)
+        .def ("cancelAnimation", &ComponentAnimator::cancelAnimation)
+        .def ("cancelAllAnimations", &ComponentAnimator::cancelAllAnimations)
+        .def ("getComponentDestination", &ComponentAnimator::getComponentDestination)
+        .def ("isAnimating", py::overload_cast<Component*> (&ComponentAnimator::isAnimating, py::const_))
+        .def ("isAnimating", py::overload_cast<> (&ComponentAnimator::isAnimating, py::const_))
     ;
 
     // ============================================================================================ juce::Component
@@ -368,16 +789,13 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     py::class_<Component, PyComponent> (m, "Component")
         .def (py::init<>())
         .def (py::init<const String&>())
-
         .def ("setName", &Component::setName)
         .def ("getName", &Component::getName)
         .def ("getComponentID", &Component::getComponentID)
-
         .def ("setVisible", &Component::setVisible)
         .def ("isVisible", &Component::isVisible)
         .def ("visibilityChanged", &Component::visibilityChanged)
         .def ("isShowing", &Component::isShowing)
-
     //.def ("addToDesktop", &Component::addToDesktop)
         .def ("removeFromDesktop", &Component::removeFromDesktop)
         .def ("isOnDesktop", &Component::isOnDesktop)
@@ -386,13 +804,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("userTriedToCloseWindow", &Component::userTriedToCloseWindow)
         .def ("minimisationStateChanged", &Component::minimisationStateChanged)
         .def ("getDesktopScaleFactor", &Component::getDesktopScaleFactor)
-
         .def ("toFront", &Component::toFront)
         .def ("toBack", &Component::toBack)
         .def ("toBehind", &Component::toBehind)
         .def ("setAlwaysOnTop", &Component::setAlwaysOnTop)
         .def ("isAlwaysOnTop", &Component::isAlwaysOnTop)
-        
         .def ("getX", &Component::getX)
         .def ("getY", &Component::getY)
         .def ("getWidth", &Component::getWidth)
@@ -407,22 +823,20 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getScreenY", &Component::getScreenY)
         .def ("getScreenPosition", &Component::getScreenPosition)
         .def ("getScreenBounds", &Component::getScreenBounds)
-
-        .def ("setTopLeftPosition", py::overload_cast<int, int>(&Component::setTopLeftPosition))
-        .def ("setTopLeftPosition", py::overload_cast<Point<int>>(&Component::setTopLeftPosition))
+        .def ("setTopLeftPosition", py::overload_cast<int, int> (&Component::setTopLeftPosition))
+        .def ("setTopLeftPosition", py::overload_cast<Point<int>> (&Component::setTopLeftPosition))
         .def ("setTopRightPosition", &Component::setTopRightPosition)
         .def ("setSize", &Component::setSize)
-        .def ("setBounds", py::overload_cast<int, int, int, int>(&Component::setBounds))
-        .def ("setBounds", py::overload_cast<Rectangle<int>>(&Component::setBounds))
-        .def ("setBoundsRelative", py::overload_cast<float, float, float, float>(&Component::setBoundsRelative))
-        .def ("setBoundsRelative", py::overload_cast<Rectangle<float>>(&Component::setBoundsRelative))
+        .def ("setBounds", py::overload_cast<int, int, int, int> (&Component::setBounds))
+        .def ("setBounds", py::overload_cast<Rectangle<int>> (&Component::setBounds))
+        .def ("setBoundsRelative", py::overload_cast<float, float, float, float> (&Component::setBoundsRelative))
+        .def ("setBoundsRelative", py::overload_cast<Rectangle<float>> (&Component::setBoundsRelative))
         .def ("setBoundsInset", &Component::setBoundsInset)
         .def ("setBoundsToFit", &Component::setBoundsToFit)
-        .def ("setCentrePosition", py::overload_cast<int, int>(&Component::setCentrePosition))
-        .def ("setCentrePosition", py::overload_cast<Point<int>>(&Component::setCentrePosition))
+        .def ("setCentrePosition", py::overload_cast<int, int> (&Component::setCentrePosition))
+        .def ("setCentrePosition", py::overload_cast<Point<int>> (&Component::setCentrePosition))
         .def ("setCentreRelative", &Component::setCentreRelative)
         .def ("centreWithSize", &Component::centreWithSize)
-
         .def ("setTransform", &Component::setTransform)
         .def ("getTransform", &Component::getTransform)
         .def ("isTransformed", &Component::isTransformed)
@@ -432,56 +846,47 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getParentWidth", &Component::getParentWidth)
         .def ("getParentHeight", &Component::getParentHeight)
         .def ("getParentMonitorArea", &Component::getParentMonitorArea)
-
         .def ("getNumChildComponents", &Component::getNumChildComponents)
         .def ("getChildComponent", &Component::getChildComponent, py::return_value_policy::reference)
         .def ("getIndexOfChildComponent", &Component::getIndexOfChildComponent)
         .def ("findChildWithID", &Component::findChildWithID)
-        .def ("addChildComponent", py::overload_cast<Component*, int>(&Component::addChildComponent))
-        .def ("addAndMakeVisible", py::overload_cast<Component*, int>(&Component::addAndMakeVisible))
+        .def ("addChildComponent", py::overload_cast<Component*, int> (&Component::addChildComponent))
+        .def ("addAndMakeVisible", py::overload_cast<Component*, int> (&Component::addAndMakeVisible))
         .def ("addChildAndSetID", &Component::addChildAndSetID)
-        .def ("removeChildComponent", py::overload_cast<Component*>(&Component::removeChildComponent))
-        .def ("removeChildComponent", py::overload_cast<int>(&Component::removeChildComponent), py::return_value_policy::reference)
+        .def ("removeChildComponent", py::overload_cast<Component*> (&Component::removeChildComponent))
+        .def ("removeChildComponent", py::overload_cast<int> (&Component::removeChildComponent), py::return_value_policy::reference)
         .def ("removeAllChildren", &Component::removeAllChildren)
         .def ("deleteAllChildren", &Component::deleteAllChildren)
         .def ("getParentComponent", &Component::getParentComponent, py::return_value_policy::reference)
         .def ("getTopLevelComponent", &Component::getTopLevelComponent, py::return_value_policy::reference)
         .def ("isParentOf", &Component::isParentOf)
-
         .def ("parentHierarchyChanged", &Component::parentHierarchyChanged)
         .def ("childrenChanged", &Component::childrenChanged)
-
         .def ("hitTest", &Component::hitTest)
         .def ("setInterceptsMouseClicks", &Component::setInterceptsMouseClicks)
     //.def ("getInterceptsMouseClicks", &Component::getInterceptsMouseClicks)
-        .def ("contains", py::overload_cast<Point<float>>(&Component::contains))
-        .def ("reallyContains", py::overload_cast<Point<float>, bool>(&Component::reallyContains))
-        .def ("getComponentAt", py::overload_cast<int, int>(&Component::getComponentAt))
-        .def ("getComponentAt", py::overload_cast<Point<float>>(&Component::getComponentAt))
-
-        .def ("repaint", py::overload_cast<>(&Component::repaint))
-        .def ("repaint", py::overload_cast<int, int, int, int>(&Component::repaint))
-        .def ("repaint", py::overload_cast<Rectangle<int>>(&Component::repaint))
+        .def ("contains", py::overload_cast<Point<float>> (&Component::contains))
+        .def ("reallyContains", py::overload_cast<Point<float>, bool> (&Component::reallyContains))
+        .def ("getComponentAt", py::overload_cast<int, int> (&Component::getComponentAt))
+        .def ("getComponentAt", py::overload_cast<Point<float>> (&Component::getComponentAt))
+        .def ("repaint", py::overload_cast<> (&Component::repaint))
+        .def ("repaint", py::overload_cast<int, int, int, int> (&Component::repaint))
+        .def ("repaint", py::overload_cast<Rectangle<int>> (&Component::repaint))
         .def ("setBufferedToImage", &Component::setBufferedToImage)
         .def ("createComponentSnapshot", &Component::createComponentSnapshot)
         .def ("paintEntireComponent", &Component::paintEntireComponent)
         .def ("setPaintingIsUnclipped", &Component::setPaintingIsUnclipped)
         .def ("isPaintingUnclipped", &Component::isPaintingUnclipped)
-
-        //.def ("setComponentEffect", &Component::setComponentEffect)
-        //.def ("getComponentEffect", &Component::getComponentEffect)
-
-        //.def ("getLookAndFeel", &Component::getLookAndFeel)
-        //.def ("setLookAndFeel", &Component::setLookAndFeel)
+    //.def ("setComponentEffect", &Component::setComponentEffect)
+    //.def ("getComponentEffect", &Component::getComponentEffect)
+    //.def ("getLookAndFeel", &Component::getLookAndFeel)
+    //.def ("setLookAndFeel", &Component::setLookAndFeel)
         .def ("lookAndFeelChanged", &Component::lookAndFeelChanged)
         .def ("sendLookAndFeelChange", &Component::sendLookAndFeelChange)
-
         .def ("setOpaque", &Component::setOpaque)
         .def ("isOpaque", &Component::isOpaque)
-
         .def ("setBroughtToFrontOnMouseClick", &Component::setBroughtToFrontOnMouseClick)
         .def ("isBroughtToFrontOnMouseClick", &Component::isBroughtToFrontOnMouseClick)
-
         .def ("setExplicitFocusOrder", &Component::setExplicitFocusOrder)
         .def ("getExplicitFocusOrder", &Component::getExplicitFocusOrder)
     //.def ("setFocusContainerType", &Component::setFocusContainerType)
@@ -500,42 +905,35 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("moveKeyboardFocusToSibling", &Component::moveKeyboardFocusToSibling)
         .def_static ("getCurrentlyFocusedComponent", &Component::getCurrentlyFocusedComponent, py::return_value_policy::reference)
         .def_static ("unfocusAllComponents", &Component::unfocusAllComponents)
-
     //.def ("createFocusTraverser", &Component::createFocusTraverser)
     //.def ("createKeyboardFocusTraverser", &Component::createKeyboardFocusTraverser)
         .def ("setHasFocusOutline", &Component::setHasFocusOutline)
         .def ("hasFocusOutline", &Component::hasFocusOutline)
-
         .def ("isEnabled", &Component::isEnabled)
         .def ("setEnabled", &Component::setEnabled)
         .def ("enablementChanged", &Component::enablementChanged)
-
         .def ("getAlpha", &Component::getAlpha)
         .def ("setAlpha", &Component::setAlpha)
         .def ("alphaChanged", &Component::alphaChanged)
-
     //.def ("setMouseCursor", &Component::setMouseCursor)
     //.def ("getMouseCursor", &Component::getMouseCursor)
         .def ("updateMouseCursor", &Component::updateMouseCursor)
-
         .def ("paint", &Component::paint)
         .def ("paintOverChildren", &Component::paintOverChildren)
-
         .def ("getMouseXYRelative", &Component::getMouseXYRelative)
         .def ("isCurrentlyBlockedByAnotherModalComponent", &Component::isCurrentlyBlockedByAnotherModalComponent)
         .def ("getProperties", py::overload_cast<>(&Component::getProperties))
-        //.def ("getPositioner", &Component::getPositioner)
-        //.def ("getCachedComponentImage", &Component::getCachedComponentImage)
+    //.def ("getPositioner", &Component::getPositioner)
+    //.def ("getCachedComponentImage", &Component::getCachedComponentImage)
         .def ("getViewportIgnoreDragFlag", &Component::getViewportIgnoreDragFlag)
         .def ("getTitle", &Component::getTitle)
         .def ("getDescription", &Component::getDescription)
         .def ("getHelpText", &Component::getHelpText)
         .def ("isAccessible", &Component::isAccessible)
-        //.def ("getAccessibilityHandler", &Component::getAccessibilityHandler)
+    //.def ("getAccessibilityHandler", &Component::getAccessibilityHandler)
 #if JUCE_MODAL_LOOPS_PERMITTED
         .def ("runModalLoop", &Component::runModalLoop)
 #endif
-
         .def ("getChildren", [](const juce::Component& self)
         {
             py::list list;
@@ -543,7 +941,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                 list.append (comp);
             return list;
         })
-
         .def ("typeName", [](const juce::Component* self)
         {
             return Helpers::demangleClassName (typeid(*self).name());
@@ -558,7 +955,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isOver", &Button::isOver)
         .def ("isToggleable", &Button::isToggleable)
         .def ("getToggleState", &Button::getToggleState)
-        //.def ("getToggleStateValue", &Button::getToggleStateValue)
+    //.def ("getToggleStateValue", &Button::getToggleStateValue)
         .def ("getClickingTogglesState", &Button::getClickingTogglesState)
         .def ("getRadioGroupId", &Button::getRadioGroupId)
         .def ("triggerClick", &Button::triggerClick)
@@ -570,24 +967,24 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isConnectedOnRight", &Button::isConnectedOnRight)
         .def ("isConnectedOnTop", &Button::isConnectedOnTop)
         .def ("isConnectedOnBottom", &Button::isConnectedOnBottom)
-        //.def ("getState", &Button::getState)
+    //.def ("getState", &Button::getState)
     ;
 
     py::class_<ArrowButton, Button> (m, "ArrowButton");
 
     py::class_<DrawableButton, Button> (m, "DrawableButton")
-        //.def ("getStyle", &DrawableButton::getStyle)
+    //.def ("getStyle", &DrawableButton::getStyle)
         .def ("getEdgeIndent", &DrawableButton::getEdgeIndent)
-        //.def ("getCurrentImage", &DrawableButton::getCurrentImage, py::return_value_policy::reference)
-        //.def ("getNormalImage", &DrawableButton::getNormalImage, py::return_value_policy::reference)
-        //.def ("getOverImage", &DrawableButton::getOverImage, py::return_value_policy::reference)
-        //.def ("getDownImage", &DrawableButton::getDownImage, py::return_value_policy::reference)
+    //.def ("getCurrentImage", &DrawableButton::getCurrentImage, py::return_value_policy::reference)
+    //.def ("getNormalImage", &DrawableButton::getNormalImage, py::return_value_policy::reference)
+    //.def ("getOverImage", &DrawableButton::getOverImage, py::return_value_policy::reference)
+    //.def ("getDownImage", &DrawableButton::getDownImage, py::return_value_policy::reference)
         .def ("getImageBounds", &DrawableButton::getImageBounds)
     ;
 
     py::class_<HyperlinkButton, Button> (m, "HyperlinkButton")
-        //.def ("getURL", &HyperlinkButton::getURL)
-        //.def ("getJustificationType", &HyperlinkButton::getJustificationType)
+    //.def ("getURL", &HyperlinkButton::getURL)
+    //.def ("getJustificationType", &HyperlinkButton::getJustificationType)
     ;
 
     py::class_<ImageButton, Button> (m, "ImageButton")
@@ -720,6 +1117,14 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     };
 
     py::class_<DocumentWindow, ResizableWindow, PyDocumentWindow> classDocumentWindow (m, "DocumentWindow");
+
+    py::enum_<DocumentWindow::TitleBarButtons> (classDocumentWindow, "TitleBarButtons")
+        .value("minimiseButton", DocumentWindow::minimiseButton)
+        .value("maximiseButton", DocumentWindow::maximiseButton)
+        .value("closeButton", DocumentWindow::closeButton)
+        .value("allButtons", DocumentWindow::allButtons)
+        .export_values();
+
     classDocumentWindow
         .def (py::init<const String&, Colour, int>())
         .def (py::init<const String&, Colour, int, bool>())
@@ -738,14 +1143,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getCloseButton", &DocumentWindow::getCloseButton, py::return_value_policy::reference)
         .def ("getMinimiseButton", &DocumentWindow::getMinimiseButton, py::return_value_policy::reference)
         .def ("getMaximiseButton", &DocumentWindow::getMaximiseButton, py::return_value_policy::reference)
+        .def_property_readonly_static ("minimiseButton", [] { return DocumentWindow::minimiseButton; })
+        .def_property_readonly_static ("maximiseButton", [] { return DocumentWindow::maximiseButton; })
+        .def_property_readonly_static ("closeButton", [] { return DocumentWindow::closeButton; })
+        .def_property_readonly_static ("allButtons", [] { return DocumentWindow::allButtons; })
     ;
-
-    py::enum_<DocumentWindow::TitleBarButtons> (classDocumentWindow, "TitleBarButtons")
-        .value("minimiseButton", DocumentWindow::minimiseButton)
-        .value("maximiseButton", DocumentWindow::maximiseButton)
-        .value("closeButton", DocumentWindow::closeButton)
-        .value("allButtons", DocumentWindow::allButtons)
-        .export_values();
 
 }
 
