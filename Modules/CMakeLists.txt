@@ -22,6 +22,5 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_library(straw::juce_straw ALIAS juce_straw)
-add_library(straw::juce_straw_recommended_warning_flags ALIAS juce_straw_recommended_warning_flags)
-
 add_library(straw::juce_python ALIAS juce_python)
+add_library(straw::juce_straw_recommended_warning_flags ALIAS juce_straw_recommended_warning_flags)
