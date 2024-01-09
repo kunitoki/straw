@@ -2,6 +2,8 @@
  * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
+#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
+
 #include "ScriptJuceGuiBasicsBindings.h"
 
 //#include "../../values/straw_VariantConverter.h"
@@ -1300,3 +1302,5 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 }
 
 } // namespace jucepy::Bindings
+
+#endif

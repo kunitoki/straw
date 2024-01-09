@@ -2,6 +2,8 @@
  * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
+#if __has_include(<juce_graphics/juce_graphics.h>)
+
 #include "ScriptJuceGraphicsBindings.h"
 #include "../utilities/ClassDemangling.h"
 #include "../utilities/PythonInterop.h"
@@ -9,6 +11,7 @@
 //#include "../../values/straw_VariantConverter.h"
 
 #include "../pybind11/operators.h"
+#include "../pybind11/stl.h"
 
 #include <functional>
 #include <string_view>
@@ -83,6 +86,7 @@ void registerPoint (pybind11::module_& m)
             .def ("toString", &T::toString)
             .def_property("x", &T::getX, &T::setX)
             .def_property("y", &T::getY, &T::setY)
+            .def ("__str__", &T::toString)
         ;
 
         type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
@@ -504,6 +508,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("writePathToStream", &Path::writePathToStream)
         .def ("toString", &Path::toString)
         .def ("restoreFromString", &Path::restoreFromString)
+        .def ("__str__", &Path::toString)
     ;
 
     // ============================================================================================ juce::Path
@@ -675,6 +680,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("toString", &Colour::toString)
         .def_static ("fromString", &Colour::fromString)
         .def ("toDisplayString", &Colour::toDisplayString)
+        .def ("__str__", &Colour::toString)
     ;
 
     // ============================================================================================ juce::Colour
@@ -876,11 +882,30 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("isVectorDevice", &Graphics::isVectorDevice)
     ;
 
-    //py::class_<Graphics::ScopedSaveState> (classGraphics, "ScopedSaveState")
-    //    .def (py::init<>([](Graphics* g) { return Graphics::ScopedSaveState (*g); }))
-    //    .def ("__enter__", [] {})
-    //    .def ("__exit__", [] {});
+    struct PyGraphicsScopedSaveState
+    {
+        PyGraphicsScopedSaveState (Graphics& g)
+            : g(g)
+        {
+        }
+    
+        Graphics& g;
+        std::unique_ptr<Graphics::ScopedSaveState> state;
+    };
 
+    py::class_<PyGraphicsScopedSaveState> (classGraphics, "ScopedSaveState")
+        .def (py::init<Graphics&>())
+        .def ("__enter__", [](PyGraphicsScopedSaveState& self)
+        {
+            self.state = std::make_unique<Graphics::ScopedSaveState> (self.g);
+        })
+        .def ("__exit__", [](PyGraphicsScopedSaveState& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
+        {
+            self.state.reset();
+        })
+    ;
 }
 
 } // namespace jucepy::Bindings
+
+#endif

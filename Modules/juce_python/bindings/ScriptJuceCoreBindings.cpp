@@ -520,6 +520,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("parseString", &BigInteger::parseString)
         .def ("toMemoryBlock", &BigInteger::toMemoryBlock)
         .def ("loadFromMemoryBlock", &BigInteger::loadFromMemoryBlock)
+        .def ("__str__", &BigInteger::toString)
     ;
 
     // ============================================================================================ juce::String
@@ -581,6 +582,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getNode", &Uuid::getNode)
         .def ("hash", &Uuid::hash)
         .def ("getRawData", &Uuid::getRawData)
+        .def ("__str__", &Uuid::toString)
     ;
 
     // ============================================================================================ juce::RelativeTime
@@ -690,6 +692,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("getBitRange", &MemoryBlock::getBitRange)
         .def ("toBase64Encoding", &MemoryBlock::toBase64Encoding)
         .def ("fromBase64Encoding", &MemoryBlock::fromBase64Encoding)
+        .def ("__str__", &MemoryBlock::toString)
     ;
 
     // ============================================================================================ juce::InputStream
@@ -813,6 +816,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def ("setPosition", &MemoryOutputStream::setPosition)
         .def ("writeFromInputStream", &MemoryOutputStream::writeFromInputStream)
         .def ("writeRepeatedByte", &MemoryOutputStream::writeRepeatedByte)
+        .def ("__str__", &MemoryOutputStream::toString)
     ;
 
     py::class_<FileOutputStream, OutputStream> classFileOutputStream (m, "FileOutputStream");
@@ -1144,6 +1148,7 @@ void registerJuceCoreBindings ([[maybe_unused]] pybind11::module_& m)
         .def_static ("addEscapeChars", &URL::addEscapeChars)
         .def_static ("removeEscapeChars", &URL::removeEscapeChars)
         .def_static ("createWithoutParsing", &URL::createWithoutParsing)
+        .def ("__str__", &URL::toString)
     ;
 
     py::class_<URL::InputStreamOptions> classURLInputStreamOptions (classURL, "InputStreamOptions");

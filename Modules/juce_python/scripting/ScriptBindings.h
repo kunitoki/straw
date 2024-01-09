@@ -4,6 +4,8 @@
 
 #pragma once
 
+#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #include "../pybind11/embed.h"
@@ -106,3 +108,5 @@ const void* ComponentType (const juce::Component* src, const std::type_info*& ty
 }
 
 } // namespace jucepy
+
+#endif

@@ -2,6 +2,8 @@
  * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
+#if __has_include(<juce_gui_basics/juce_gui_basics.h>)
+
 #include "ScriptBindings.h"
 #include "ScriptException.h"
 #include "ScriptUtilities.h"
@@ -39,3 +41,5 @@ void clearComponentTypes()
 }
 
 } // namespace jucepy::Bindings
+
+#endif

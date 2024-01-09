@@ -2,6 +2,8 @@
  * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
  */
 
+#if __has_include(<juce_events/juce_events.h>)
+
 #include "ScriptJuceGuiBasicsBindings.h"
 #include "ScriptJuceEventsBindings.h"
 
@@ -132,3 +134,5 @@ void registerJuceEventsBindings (pybind11::module_& m)
 }
 
 } // namespace jucepy::Bindings
+
+#endif
