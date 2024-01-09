@@ -26,6 +26,13 @@ public:
     /**
      * @brief Construct a new ScriptEngine object
      *
+     * Initializes a ScriptEngine object.
+     */
+    ScriptEngine();
+
+    /**
+     * @brief Construct a new ScriptEngine object
+     *
      * Initializes a ScriptEngine object with the specified custom modules.
      *
      * @param modules An array of module names to be imported in the Python interpreter.

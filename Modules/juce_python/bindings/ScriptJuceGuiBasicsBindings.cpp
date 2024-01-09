@@ -743,9 +743,147 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
             return Component::paintOverChildren (g);
         }
+        
+        void mouseMove (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseMove, event);
+        }
+
+        void mouseEnter (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseEnter, event);
+        }
+
+        void mouseExit (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseExit, event);
+        }
+
+        void mouseDown (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseDown, event);
+        }
+
+        void mouseDrag (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseDrag, event);
+        }
+
+        void mouseUp (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseUp, event);
+        }
+
+        void mouseDoubleClick (const MouseEvent& event) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseDoubleClick, event);
+        }
+
+        void mouseWheelMove (const MouseEvent& event, const MouseWheelDetails& wheel) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseWheelMove, event, wheel);
+        }
+
+        void mouseMagnify (const MouseEvent& event, float scaleFactor) override
+        {
+            PYBIND11_OVERRIDE (void, Component, mouseMagnify, event, scaleFactor);
+        }
+        
+        bool keyPressed (const KeyPress& key) override
+        {
+            PYBIND11_OVERRIDE (bool, Component, keyPressed, key);
+        }
+        
+        bool keyStateChanged (bool isKeyDown) override
+        {
+            PYBIND11_OVERRIDE (bool, Component, keyStateChanged, isKeyDown);
+        }
+        
+        void modifierKeysChanged (const ModifierKeys& modifiers) override
+        {
+            PYBIND11_OVERRIDE (void, Component, modifierKeysChanged, modifiers);
+        }
+
+        void focusGained (Component::FocusChangeType cause) override
+        {
+            PYBIND11_OVERRIDE (void, Component, focusGained, cause);
+        }
+
+        void focusGainedWithDirection (Component::FocusChangeType cause, Component::FocusChangeDirection direction) override
+        {
+            PYBIND11_OVERRIDE (void, Component, focusGainedWithDirection, cause, direction);
+        }
+
+        void focusLost (Component::FocusChangeType cause) override
+        {
+            PYBIND11_OVERRIDE (void, Component, focusLost, cause);
+        }
+
+        void focusOfChildComponentChanged (Component::FocusChangeType cause) override
+        {
+            PYBIND11_OVERRIDE (void, Component, focusOfChildComponentChanged, cause);
+        }
+
+        void resized () override
+        {
+            PYBIND11_OVERRIDE (void, Component, resized);
+        }
+
+        void moved () override
+        {
+            PYBIND11_OVERRIDE (void, Component, moved);
+        }
+
+        void childBoundsChanged (Component* child) override
+        {
+            PYBIND11_OVERRIDE (void, Component, childBoundsChanged, child);
+        }
+
+        void parentSizeChanged () override
+        {
+            PYBIND11_OVERRIDE (void, Component, parentSizeChanged);
+        }
+
+        void broughtToFront () override
+        {
+            PYBIND11_OVERRIDE (void, Component, broughtToFront);
+        }
+
+        void handleCommandMessage (int commandId) override
+        {
+            PYBIND11_OVERRIDE (void, Component, handleCommandMessage, commandId);
+        }
+        
+        bool canModalEventBeSentToComponent (const Component* targetComponent) override
+        {
+            PYBIND11_OVERRIDE (bool, Component, canModalEventBeSentToComponent, targetComponent);
+        }
+
+        void inputAttemptWhenModal () override
+        {
+            PYBIND11_OVERRIDE (void, Component, inputAttemptWhenModal);
+        }
+
+        void colourChanged () override
+        {
+            PYBIND11_OVERRIDE (void, Component, colourChanged);
+        }
     };
 
-    py::class_<Component, PyComponent> (m, "Component")
+    py::class_<Component, PyComponent> classComponent (m, "Component");
+
+    py::enum_<Component::FocusChangeType> (classComponent, "FocusChangeType")
+        .value ("focusChangedByMouseClick", Component::FocusChangeType::focusChangedByMouseClick)
+        .value ("focusChangedByTabKey", Component::FocusChangeType::focusChangedByTabKey)
+        .value ("focusChangedDirectly", Component::FocusChangeType::focusChangedDirectly)
+        .export_values();
+
+    py::enum_<Component::FocusChangeDirection> (classComponent, "FocusChangeDirection")
+        .value ("unknown", Component::FocusChangeDirection::unknown)
+        .value ("forward", Component::FocusChangeDirection::forward)
+        .value ("backward", Component::FocusChangeDirection::backward);
+
+    classComponent
         .def (py::init<>())
         .def (py::init<const String&>())
         .def ("setName", &Component::setName)
@@ -808,7 +946,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getNumChildComponents", &Component::getNumChildComponents)
         .def ("getChildComponent", &Component::getChildComponent, py::return_value_policy::reference)
         .def ("getIndexOfChildComponent", &Component::getIndexOfChildComponent)
-        .def ("findChildWithID", &Component::findChildWithID)
+        .def ("findChildWithID", &Component::findChildWithID, py::return_value_policy::reference)
         .def ("addChildComponent", py::overload_cast<Component*, int> (&Component::addChildComponent))
         .def ("addAndMakeVisible", py::overload_cast<Component*, int> (&Component::addAndMakeVisible))
         .def ("addChildAndSetID", &Component::addChildAndSetID)
@@ -823,11 +961,12 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("childrenChanged", &Component::childrenChanged)
         .def ("hitTest", &Component::hitTest)
         .def ("setInterceptsMouseClicks", &Component::setInterceptsMouseClicks)
-    //.def ("getInterceptsMouseClicks", &Component::getInterceptsMouseClicks)
+        .def ("getInterceptsMouseClicks", [](const Component& self) { bool a, b; self.getInterceptsMouseClicks(a, b); return py::make_tuple(a, b); })
         .def ("contains", py::overload_cast<Point<float>> (&Component::contains))
         .def ("reallyContains", py::overload_cast<Point<float>, bool> (&Component::reallyContains))
-        .def ("getComponentAt", py::overload_cast<int, int> (&Component::getComponentAt))
-        .def ("getComponentAt", py::overload_cast<Point<float>> (&Component::getComponentAt))
+        .def ("getComponentAt", py::overload_cast<int, int> (&Component::getComponentAt), py::return_value_policy::reference)
+        .def ("getComponentAt", py::overload_cast<Point<int>> (&Component::getComponentAt), py::return_value_policy::reference)
+        .def ("getComponentAt", py::overload_cast<Point<float>> (&Component::getComponentAt), py::return_value_policy::reference)
         .def ("repaint", py::overload_cast<> (&Component::repaint))
         .def ("repaint", py::overload_cast<int, int, int, int> (&Component::repaint))
         .def ("repaint", py::overload_cast<Rectangle<int>> (&Component::repaint))
@@ -853,7 +992,6 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("isKeyboardFocusContainer", &Component::isKeyboardFocusContainer)
         .def ("findFocusContainer", &Component::findFocusContainer, py::return_value_policy::reference)
         .def ("findKeyboardFocusContainer", &Component::findKeyboardFocusContainer, py::return_value_policy::reference)
-
         .def ("setWantsKeyboardFocus", &Component::setWantsKeyboardFocus)
         .def ("getWantsKeyboardFocus", &Component::getWantsKeyboardFocus)
         .def ("setMouseClickGrabsKeyboardFocus", &Component::setMouseClickGrabsKeyboardFocus)
@@ -874,25 +1012,80 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("getAlpha", &Component::getAlpha)
         .def ("setAlpha", &Component::setAlpha)
         .def ("alphaChanged", &Component::alphaChanged)
-    //.def ("setMouseCursor", &Component::setMouseCursor)
-    //.def ("getMouseCursor", &Component::getMouseCursor)
+        .def ("setMouseCursor", &Component::setMouseCursor)
+        .def ("getMouseCursor", &Component::getMouseCursor)
         .def ("updateMouseCursor", &Component::updateMouseCursor)
         .def ("paint", &Component::paint)
         .def ("paintOverChildren", &Component::paintOverChildren)
+        .def ("mouseMove", &Component::mouseMove)
+        .def ("mouseEnter", &Component::mouseEnter)
+        .def ("mouseExit", &Component::mouseExit)
+        .def ("mouseDown", &Component::mouseDown)
+        .def ("mouseDrag", &Component::mouseDrag)
+        .def ("mouseUp", &Component::mouseUp)
+        .def ("mouseDoubleClick", &Component::mouseDoubleClick)
+        .def ("mouseWheelMove", &Component::mouseWheelMove)
+        .def ("mouseMagnify", &Component::mouseMagnify)
+        .def_static ("beginDragAutoRepeat", &Component::beginDragAutoRepeat)
+        .def ("setRepaintsOnMouseActivity", &Component::setRepaintsOnMouseActivity)
+        .def ("addMouseListener", &Component::addMouseListener)
+        .def ("removeMouseListener", &Component::removeMouseListener)
+    //.def ("addKeyListener", &Component::addKeyListener)
+    //.def ("removeKeyListener", &Component::removeKeyListener)
+    //.def ("keyPressed", &Component::keyPressed)
+    //.def ("keyStateChanged", &Component::keyStateChanged)
+    //.def ("modifierKeysChanged", &Component::modifierKeysChanged)
+        .def ("isMouseOver", &Component::isMouseOver)
+        .def ("isMouseButtonDown", &Component::isMouseButtonDown)
+        .def ("isMouseOverOrDragging", &Component::isMouseOverOrDragging)
+        .def_static ("isMouseButtonDownAnywhere", &Component::isMouseButtonDownAnywhere)
         .def ("getMouseXYRelative", &Component::getMouseXYRelative)
-        .def ("isCurrentlyBlockedByAnotherModalComponent", &Component::isCurrentlyBlockedByAnotherModalComponent)
-        .def ("getProperties", py::overload_cast<>(&Component::getProperties))
-    //.def ("getPositioner", &Component::getPositioner)
-    //.def ("getCachedComponentImage", &Component::getCachedComponentImage)
-        .def ("getViewportIgnoreDragFlag", &Component::getViewportIgnoreDragFlag)
-        .def ("getTitle", &Component::getTitle)
-        .def ("getDescription", &Component::getDescription)
-        .def ("getHelpText", &Component::getHelpText)
-        .def ("isAccessible", &Component::isAccessible)
-    //.def ("getAccessibilityHandler", &Component::getAccessibilityHandler)
+        .def ("resized", &Component::resized)
+        .def ("moved", &Component::moved)
+        .def ("childBoundsChanged", &Component::childBoundsChanged)
+        .def ("parentSizeChanged", &Component::parentSizeChanged)
+        .def ("broughtToFront", &Component::broughtToFront)
+    //.def ("addComponentListener", &Component::addComponentListener)
+    //.def ("removeComponentListener", &Component::removeComponentListener)
+        .def ("postCommandMessage", &Component::postCommandMessage)
+        .def ("handleCommandMessage", &Component::handleCommandMessage)
 #if JUCE_MODAL_LOOPS_PERMITTED
         .def ("runModalLoop", &Component::runModalLoop)
 #endif
+    //.def ("enterModalState", &Component::enterModalState)
+    //.def ("exitModalState", &Component::exitModalState)
+        .def ("isCurrentlyModal", &Component::isCurrentlyModal)
+        .def_static ("getNumCurrentlyModalComponents", &Component::getNumCurrentlyModalComponents)
+        .def_static ("getCurrentlyModalComponent", &Component::getCurrentlyModalComponent)
+        .def ("isCurrentlyBlockedByAnotherModalComponent", &Component::isCurrentlyBlockedByAnotherModalComponent)
+        .def ("canModalEventBeSentToComponent", &Component::canModalEventBeSentToComponent)
+        .def ("inputAttemptWhenModal", &Component::inputAttemptWhenModal)
+        .def ("getProperties", py::overload_cast<> (&Component::getProperties))
+        .def ("getProperties", py::overload_cast<> (&Component::getProperties, py::const_))
+        .def ("findColour", &Component::findColour)
+        .def ("setColour", &Component::setColour)
+        .def ("removeColour", &Component::removeColour)
+        .def ("isColourSpecified", &Component::isColourSpecified)
+        .def ("copyAllExplicitColoursTo", [](const Component& self, Component* target) { self.copyAllExplicitColoursTo (*target); })
+        .def ("colourChanged", &Component::colourChanged)
+    //.def ("getWindowHandle", &Component::getWindowHandle)
+    //.def ("getPositioner", &Component::getPositioner)
+    //.def ("setPositioner", &Component::setPositioner)
+    //.def ("setCachedComponentImage", &Component::setCachedComponentImage)
+    //.def ("getCachedComponentImage", &Component::getCachedComponentImage)
+        .def ("setViewportIgnoreDragFlag", &Component::setViewportIgnoreDragFlag)
+        .def ("getViewportIgnoreDragFlag", &Component::getViewportIgnoreDragFlag)
+        .def ("getTitle", &Component::getTitle)
+        .def ("setTitle", &Component::setTitle)
+        .def ("getDescription", &Component::getDescription)
+        .def ("setDescription", &Component::setDescription)
+        .def ("getHelpText", &Component::getHelpText)
+        .def ("setHelpText", &Component::setHelpText)
+        .def ("setAccessible", &Component::setAccessible)
+        .def ("isAccessible", &Component::isAccessible)
+    //.def ("getAccessibilityHandler", &Component::getAccessibilityHandler)
+        .def ("invalidateAccessibilityHandler", &Component::invalidateAccessibilityHandler)
+    //.def ("createAccessibilityHandler", &Component::createAccessibilityHandler)
         .def ("getChildren", [](const juce::Component& self)
         {
             py::list list;

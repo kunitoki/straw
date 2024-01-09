@@ -59,6 +59,11 @@ inline py::scoped_interpreter& getMainPythonEngine()
 
 //=================================================================================================
 
+ScriptEngine::ScriptEngine ()
+    : ScriptEngine (juce::StringArray{})
+{
+}
+
 ScriptEngine::ScriptEngine (juce::StringArray modules)
     : pythonEngine (getMainPythonEngine())
     , customModules (std::move (modules))
