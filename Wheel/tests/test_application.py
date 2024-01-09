@@ -35,6 +35,15 @@ class MainContentComponent(juce.Component, juce.Timer):
 			rect.setCentre(self.random.nextInt(self.getWidth()), self.random.nextInt(self.getHeight()))
 			g.drawRect(rect, 1)
 
+	def mouseDown(self, event):
+		print("mouseDown", event)
+
+	def mouseMove(self, event):
+		print("mouseMove", event.position.x, event.position.y)
+
+	def mouseUp(self, event):
+		print("mouseUp", event)
+
 	def timerCallback(self):
 		self.repaint()
 

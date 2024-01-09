@@ -743,7 +743,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
             return Component::paintOverChildren (g);
         }
-        
+
         void mouseMove (const MouseEvent& event) override
         {
             PYBIND11_OVERRIDE (void, Component, mouseMove, event);
