@@ -336,20 +336,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::AffineTransform
 
     py::class_<Justification> classJustification (m, "Justification");
-    classJustification
-        .def (py::init<Justification::Flags>())
-        .def (py::init<const Justification&>())
-        .def (py::self == py::self)
-        .def (py::self != py::self)
-        .def ("getFlags", &Justification::getFlags)
-        .def ("testFlags", &Justification::testFlags)
-        .def ("getOnlyVerticalFlags", &Justification::getOnlyVerticalFlags)
-        .def ("getOnlyHorizontalFlags", &Justification::getOnlyHorizontalFlags)
-        .def ("applyToRectangle", &Justification::template applyToRectangle<int>)
-        .def ("applyToRectangle", &Justification::template applyToRectangle<float>)
-        .def ("appliedToRectangle", &Justification::template appliedToRectangle<int>)
-        .def ("appliedToRectangle", &Justification::template appliedToRectangle<float>)
-    ;
 
     py::enum_<Justification::Flags> (classJustification, "Flags")
         .value("left", Justification::Flags::left)
@@ -369,6 +355,21 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .value("bottomLeft", Justification::Flags::bottomLeft)
         .value("bottomRight", Justification::Flags::bottomRight)
         .export_values();
+
+    classJustification
+        .def (py::init<Justification::Flags>())
+        .def (py::init<const Justification&>())
+        .def (py::self == py::self)
+        .def (py::self != py::self)
+        .def ("getFlags", &Justification::getFlags)
+        .def ("testFlags", &Justification::testFlags)
+        .def ("getOnlyVerticalFlags", &Justification::getOnlyVerticalFlags)
+        .def ("getOnlyHorizontalFlags", &Justification::getOnlyHorizontalFlags)
+        .def ("applyToRectangle", &Justification::template applyToRectangle<int>)
+        .def ("applyToRectangle", &Justification::template applyToRectangle<float>)
+        .def ("appliedToRectangle", &Justification::template appliedToRectangle<int>)
+        .def ("appliedToRectangle", &Justification::template appliedToRectangle<float>)
+    ;
 
     // ============================================================================================ juce::AffineTransform
 
@@ -508,6 +509,19 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Path
 
     py::class_<PathStrokeType> classPathStrokeType (m, "PathStrokeType");
+
+    py::enum_<PathStrokeType::JointStyle> (classPathStrokeType, "JointStyle")
+        .value("mitered", PathStrokeType::mitered)
+        .value("curved", PathStrokeType::curved)
+        .value("beveled", PathStrokeType::beveled)
+        .export_values();
+
+    py::enum_<PathStrokeType::EndCapStyle> (classPathStrokeType, "EndCapStyle")
+        .value("butt", PathStrokeType::butt)
+        .value("square", PathStrokeType::square)
+        .value("rounded", PathStrokeType::rounded)
+        .export_values();
+
     classPathStrokeType
         .def (py::init<float>())
         .def (py::init<float, PathStrokeType::JointStyle>())
@@ -527,18 +541,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def (py::self == py::self)
         .def (py::self != py::self)
     ;
-
-    py::enum_<PathStrokeType::JointStyle> (classPathStrokeType, "JointStyle")
-        .value("mitered", PathStrokeType::mitered)
-        .value("curved", PathStrokeType::curved)
-        .value("beveled", PathStrokeType::beveled)
-        .export_values();
-
-    py::enum_<PathStrokeType::EndCapStyle> (classPathStrokeType, "EndCapStyle")
-        .value("butt", PathStrokeType::butt)
-        .value("square", PathStrokeType::square)
-        .value("rounded", PathStrokeType::rounded)
-        .export_values();
 
     // ============================================================================================ juce::PixelARGB
 
@@ -710,6 +712,14 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Image
 
     py::class_<Image> imageClass (m, "Image");
+
+    py::enum_<Image::PixelFormat> (imageClass, "PixelFormat")
+        .value("UnknownFormat", Image::PixelFormat::UnknownFormat)
+        .value("RGB", Image::PixelFormat::RGB)
+        .value("ARGB", Image::PixelFormat::ARGB)
+        .value("SingleChannel", Image::PixelFormat::SingleChannel)
+        .export_values();
+
     imageClass
         .def (py::init<>())
     //.def (py::init<Image::PixelFormat, int, int, bool>())
@@ -744,13 +754,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getReferenceCount", &Image::getReferenceCount)
     //.def ("getPixelData", &Image::getPixelData)
     ;
-
-    py::enum_<Image::PixelFormat> (imageClass, "PixelFormat")
-        .value("UnknownFormat", Image::PixelFormat::UnknownFormat)
-        .value("RGB", Image::PixelFormat::RGB)
-        .value("ARGB", Image::PixelFormat::ARGB)
-        .value("SingleChannel", Image::PixelFormat::SingleChannel)
-        .export_values();
 
     // ============================================================================================ juce::FillType
 
@@ -791,6 +794,13 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     // ============================================================================================ juce::Graphics
 
     py::class_<Graphics> classGraphics (m, "Graphics");
+
+    py::enum_<Graphics::ResamplingQuality> (classGraphics, "ResamplingQuality")
+        .value("lowResamplingQuality", Graphics::ResamplingQuality::lowResamplingQuality)
+        .value("mediumResamplingQuality", Graphics::ResamplingQuality::mediumResamplingQuality)
+        .value("highResamplingQuality", Graphics::ResamplingQuality::highResamplingQuality)
+        .export_values();
+
     classGraphics
         .def (py::init<const Image&>())
         .def ("setColour", &Graphics::setColour)
@@ -865,12 +875,6 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("resetToDefaultState", &Graphics::resetToDefaultState)
         .def ("isVectorDevice", &Graphics::isVectorDevice)
     ;
-
-    py::enum_<Graphics::ResamplingQuality> (classGraphics, "ResamplingQuality")
-        .value("lowResamplingQuality", Graphics::lowResamplingQuality)
-        .value("mediumResamplingQuality", Graphics::mediumResamplingQuality)
-        .value("highResamplingQuality", Graphics::highResamplingQuality)
-        .export_values();
 
     //py::class_<Graphics::ScopedSaveState> (classGraphics, "ScopedSaveState")
     //    .def (py::init<>([](Graphics* g) { return Graphics::ScopedSaveState (*g); }))

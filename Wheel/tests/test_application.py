@@ -15,7 +15,6 @@ class MainContentComponent(juce.Component, juce.Timer):
 		juce.Timer.__init__(self)
 
 		self.random = juce.Random(13)
-		self.counter = 0
 
 		self.setSize(600, 400)
 		self.setOpaque(True)
@@ -36,10 +35,6 @@ class MainContentComponent(juce.Component, juce.Timer):
 			rect.setCentre(self.random.nextInt(self.getWidth()), self.random.nextInt(self.getHeight()))
 			g.drawRect(rect, 1)
 
-		self.counter += 1
-		if self.counter == 300:
-			raise RuntimeError("boom!")
-
 	def timerCallback(self):
 		self.repaint()
 
@@ -51,7 +46,7 @@ class MainWindow(juce.DocumentWindow):
 		super().__init__(
 			juce.JUCEApplication.getInstance().getApplicationName(),
 			juce.Colour(0, 0, 0, 0),
-			juce.DocumentWindow.TitleBarButtons.allButtons,
+			juce.DocumentWindow.allButtons,
 			True)
 
 		self.component = MainContentComponent()
@@ -63,7 +58,8 @@ class MainWindow(juce.DocumentWindow):
 
 	def __del__(self):
 		self.clearContentComponent()
-		del self.component
+		if self.component:
+			del self.component
 
 	def closeButtonPressed(self):
 		juce.JUCEApplication.getInstance().systemRequestedQuit()
