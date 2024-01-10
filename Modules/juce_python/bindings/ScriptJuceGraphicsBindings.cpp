@@ -1025,18 +1025,18 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         }
 
         Graphics& g;
-        std::unique_ptr<Graphics::ScopedSaveState> state;
+        std::variant<std::monostate, Graphics::ScopedSaveState> state;
     };
 
     py::class_<PyGraphicsScopedSaveState> (classGraphics, "ScopedSaveState")
         .def (py::init<Graphics&>())
         .def ("__enter__", [](PyGraphicsScopedSaveState& self)
         {
-            self.state = std::make_unique<Graphics::ScopedSaveState> (self.g);
+            self.state.emplace<Graphics::ScopedSaveState>(self.g);
         })
         .def ("__exit__", [](PyGraphicsScopedSaveState& self, const std::optional<py::type>&, const std::optional<py::object>&, const std::optional<py::object>&)
         {
-            self.state.reset();
+            self.state.emplace<std::monostate>();
         })
     ;
 }
