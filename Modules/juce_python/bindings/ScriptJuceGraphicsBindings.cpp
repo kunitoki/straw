@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_graphics/juce_graphics.h>)
@@ -16,6 +16,7 @@
 #include <functional>
 #include <string_view>
 #include <tuple>
+#include <variant>
 
 namespace jucepy::Bindings {
 
@@ -279,6 +280,70 @@ void registerRectangle (pybind11::module_& m)
 // ============================================================================================
 
 template <template <class> class Class, class... Types>
+void registerRectangleList (pybind11::module_& m)
+{
+    using namespace juce;
+
+    namespace py = pybind11;
+
+    py::dict type;
+    py::object scope;
+
+    ([&]
+    {
+        using ValueType = Types;
+        using T = Class<ValueType>;
+
+        String className;
+        className << "RectangleList[" << jucepy::Helpers::demangleClassName (typeid (Types).name()) << "]";
+
+        auto class_ = py::class_<T> (scope, className.toRawUTF8())
+            .def (py::init<>())
+            .def (py::init<Rectangle<ValueType>>())
+            .def ("isEmpty", &T::isEmpty)
+            .def ("getNumRectangles", &T::getNumRectangles)
+            .def ("getRectangle", &T::getRectangle)
+            .def ("clear", &T::clear)
+            .def ("add", py::overload_cast<Rectangle<ValueType>> (&T::add))
+            .def ("add", py::overload_cast<ValueType, ValueType, ValueType, ValueType> (&T::add))
+            .def ("addWithoutMerging", &T::addWithoutMerging)
+            .def ("add", py::overload_cast<const T&> (&T::add))
+            .def ("subtract", py::overload_cast<const Rectangle<ValueType>> (&T::subtract))
+            .def ("subtract", py::overload_cast<const T&> (&T::subtract))
+            .def ("clipTo", static_cast<bool (T::*)(Rectangle<ValueType>)> (&T::clipTo))
+            .def ("clipTo", py::overload_cast<const Class<int>&> (&T::template clipTo<int>))
+            .def ("clipTo", py::overload_cast<const Class<float>&> (&T::template clipTo<float>))
+        //.def ("getIntersectionWith", &T::getIntersectionWith)
+        //.def ("swapWith", &T::swapWith)
+            .def ("containsPoint", py::overload_cast<Point<ValueType>> (&T::containsPoint, py::const_))
+            .def ("containsPoint", py::overload_cast<ValueType, ValueType> (&T::containsPoint, py::const_))
+            .def ("containsRectangle", &T::containsRectangle)
+            .def ("intersectsRectangle", &T::intersectsRectangle)
+            .def ("intersects", &T::intersects)
+            .def ("getBounds", &T::getBounds)
+            .def ("consolidate", &T::consolidate)
+            .def ("offsetAll", py::overload_cast<Point<ValueType>> (&T::offsetAll))
+            .def ("offsetAll", py::overload_cast<ValueType, ValueType> (&T::offsetAll))
+            .def ("scaleAll", py::overload_cast<int> (&T::template scaleAll<int>))
+            .def ("scaleAll", py::overload_cast<float> (&T::template scaleAll<float>))
+            .def ("transformAll", &T::transformAll)
+            .def ("toPath", &T::toPath)
+        //.def ("begin", &T::begin)
+        //.def ("end", &T::end)
+            .def ("ensureStorageAllocated", &T::ensureStorageAllocated)
+        ;
+
+        type[py::type::of (typename Helpers::CppToPython<Types>::type{})] = class_;
+
+        return true;
+    }() && ...);
+
+    m.add_object ("RectangleList", type);
+}
+
+// ============================================================================================
+
+template <template <class> class Class, class... Types>
 void registerBorderSize (pybind11::module_& m)
 {
     using namespace juce;
@@ -342,27 +407,26 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     py::class_<Justification> classJustification (m, "Justification");
 
     py::enum_<Justification::Flags> (classJustification, "Flags")
-        .value("left", Justification::Flags::left)
-        .value("right", Justification::Flags::right)
-        .value("horizontallyCentred", Justification::Flags::horizontallyCentred)
-        .value("top", Justification::Flags::top)
-        .value("bottom", Justification::Flags::bottom)
-        .value("verticallyCentred", Justification::Flags::verticallyCentred)
-        .value("horizontallyJustified", Justification::Flags::horizontallyJustified)
-        .value("centred", Justification::Flags::centred)
-        .value("centredLeft", Justification::Flags::centredLeft)
-        .value("centredRight", Justification::Flags::centredRight)
-        .value("centredTop", Justification::Flags::centredTop)
-        .value("centredBottom", Justification::Flags::centredBottom)
-        .value("topLeft", Justification::Flags::topLeft)
-        .value("topRight", Justification::Flags::topRight)
-        .value("bottomLeft", Justification::Flags::bottomLeft)
-        .value("bottomRight", Justification::Flags::bottomRight)
+        .value ("left", Justification::Flags::left)
+        .value ("right", Justification::Flags::right)
+        .value ("horizontallyCentred", Justification::Flags::horizontallyCentred)
+        .value ("top", Justification::Flags::top)
+        .value ("bottom", Justification::Flags::bottom)
+        .value ("verticallyCentred", Justification::Flags::verticallyCentred)
+        .value ("horizontallyJustified", Justification::Flags::horizontallyJustified)
+        .value ("centred", Justification::Flags::centred)
+        .value ("centredLeft", Justification::Flags::centredLeft)
+        .value ("centredRight", Justification::Flags::centredRight)
+        .value ("centredTop", Justification::Flags::centredTop)
+        .value ("centredBottom", Justification::Flags::centredBottom)
+        .value ("topLeft", Justification::Flags::topLeft)
+        .value ("topRight", Justification::Flags::topRight)
+        .value ("bottomLeft", Justification::Flags::bottomLeft)
+        .value ("bottomRight", Justification::Flags::bottomRight)
         .export_values();
 
     classJustification
         .def (py::init<Justification::Flags>())
-        .def (py::init<const Justification&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("getFlags", &Justification::getFlags)
@@ -379,25 +443,24 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     py::class_<AffineTransform> (m, "AffineTransform")
         .def (py::init<>())
-    //.def (py::init<const AffineTransform&>())
         .def (py::init<float, float, float, float, float, float>())
         .def (py::self == py::self)
         .def (py::self != py::self)
     //.def ("transformPoint", &AffineTransform::transformPoint)
     //.def ("transformPoints", &AffineTransform::transformPoints)
-        .def ("translated", static_cast<AffineTransform (AffineTransform::*)(float, float) const>(&AffineTransform::translated))
-        .def_static ("translation", static_cast<AffineTransform (*)(float, float)>(&AffineTransform::translation))
+        .def ("translated", static_cast<AffineTransform (AffineTransform::*)(float, float) const> (&AffineTransform::translated))
+        .def_static ("translation", static_cast<AffineTransform (*)(float, float)> (&AffineTransform::translation))
         .def ("withAbsoluteTranslation", &AffineTransform::withAbsoluteTranslation)
-        .def ("rotated", py::overload_cast<float>(&AffineTransform::rotated, py::const_))
-        .def ("rotated", py::overload_cast<float, float, float>(&AffineTransform::rotated, py::const_))
-        .def_static ("rotation", py::overload_cast<float>(&AffineTransform::rotation))
-        .def_static ("rotation", py::overload_cast<float, float, float>(&AffineTransform::rotation))
-        .def ("scaled", py::overload_cast<float, float>(&AffineTransform::scaled, py::const_))
-        .def ("scaled", py::overload_cast<float>(&AffineTransform::scaled, py::const_))
-        .def ("scaled", py::overload_cast<float, float, float, float>(&AffineTransform::scaled, py::const_))
-        .def_static ("scale", py::overload_cast<float, float>(&AffineTransform::scale))
-        .def_static ("scale", py::overload_cast<float>(&AffineTransform::scale))
-        .def_static ("scale", py::overload_cast<float, float, float, float>(&AffineTransform::scale))
+        .def ("rotated", py::overload_cast<float> (&AffineTransform::rotated, py::const_))
+        .def ("rotated", py::overload_cast<float, float, float> (&AffineTransform::rotated, py::const_))
+        .def_static ("rotation", py::overload_cast<float> (&AffineTransform::rotation))
+        .def_static ("rotation", py::overload_cast<float, float, float> (&AffineTransform::rotation))
+        .def ("scaled", py::overload_cast<float, float> (&AffineTransform::scaled, py::const_))
+        .def ("scaled", py::overload_cast<float> (&AffineTransform::scaled, py::const_))
+        .def ("scaled", py::overload_cast<float, float, float, float> (&AffineTransform::scaled, py::const_))
+        .def_static ("scale", py::overload_cast<float, float> (&AffineTransform::scale))
+        .def_static ("scale", py::overload_cast<float> (&AffineTransform::scale))
+        .def_static ("scale", py::overload_cast<float, float, float, float> (&AffineTransform::scale))
         .def ("sheared", &AffineTransform::sheared)
         .def_static ("shear", &AffineTransform::shear)
         .def_static ("verticalFlip", &AffineTransform::verticalFlip)
@@ -442,6 +505,10 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     registerRectangle<Rectangle, int, float> (m);
 
+    // ============================================================================================ juce::RectangleList<>
+
+    registerRectangleList<RectangleList, int, float> (m);
+
     // ============================================================================================ juce::BorderSize<>
 
     registerBorderSize<BorderSize, int, float> (m);
@@ -456,50 +523,56 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("isEmpty", &Path::isEmpty)
         .def ("getBounds", &Path::getBounds)
         .def ("getBoundsTransformed", &Path::getBoundsTransformed)
-        .def ("contains", py::overload_cast<float, float, float>(&Path::contains, py::const_))
-        .def ("contains", py::overload_cast<Point<float>, float>(&Path::contains, py::const_))
+        .def ("contains", py::overload_cast<float, float, float> (&Path::contains, py::const_))
+        .def ("contains", py::overload_cast<Point<float>, float> (&Path::contains, py::const_))
         .def ("intersectsLine", &Path::intersectsLine)
         .def ("getClippedLine", &Path::getClippedLine)
         .def ("getLength", &Path::getLength)
         .def ("getPointAlongPath", &Path::getPointAlongPath)
         .def ("getNearestPoint", &Path::getNearestPoint)
         .def ("clear", &Path::clear)
-        .def ("startNewSubPath", py::overload_cast<float, float>(&Path::startNewSubPath))
-        .def ("startNewSubPath", py::overload_cast<Point<float>>(&Path::startNewSubPath))
+        .def ("startNewSubPath", py::overload_cast<float, float> (&Path::startNewSubPath))
+        .def ("startNewSubPath", py::overload_cast<Point<float>> (&Path::startNewSubPath))
         .def ("closeSubPath", &Path::closeSubPath)
-        .def ("lineTo", py::overload_cast<float, float>(&Path::lineTo))
-        .def ("lineTo", py::overload_cast<Point<float>>(&Path::lineTo))
-        .def ("quadraticTo", py::overload_cast<float, float, float, float>(&Path::quadraticTo))
-        .def ("quadraticTo", py::overload_cast<Point<float>, Point<float>>(&Path::quadraticTo))
-        .def ("cubicTo", py::overload_cast<float, float, float, float, float, float>(&Path::cubicTo))
-        .def ("cubicTo", py::overload_cast<Point<float>, Point<float>, Point<float>>(&Path::cubicTo))
+        .def ("lineTo", py::overload_cast<float, float> (&Path::lineTo))
+        .def ("lineTo", py::overload_cast<Point<float>> (&Path::lineTo))
+        .def ("quadraticTo", py::overload_cast<float, float, float, float> (&Path::quadraticTo))
+        .def ("quadraticTo", py::overload_cast<Point<float>, Point<float>> (&Path::quadraticTo))
+        .def ("cubicTo", py::overload_cast<float, float, float, float, float, float> (&Path::cubicTo))
+        .def ("cubicTo", py::overload_cast<Point<float>, Point<float>, Point<float>> (&Path::cubicTo))
         .def ("getCurrentPosition", &Path::getCurrentPosition)
-        .def ("addRectangle", static_cast<void (Path::*)(float, float, float, float)>(&Path::addRectangle))
-    //.def ("addRoundedRectangle", py::overload_cast<float, float, float, float, float>(&Path::addRoundedRectangle))
-    //.def ("addRoundedRectangle", py::overload_cast<float, float, float, float, float, float>(&Path::addRoundedRectangle))
-    //.def ("addRoundedRectangle", py::overload_cast<float, float, float, float, float, float, bool, bool, bool, bool>(&Path::addRoundedRectangle))
-        .def ("addTriangle", py::overload_cast<float, float, float, float, float, float>(&Path::addTriangle))
-        .def ("addTriangle", py::overload_cast<Point<float>, Point<float>, Point<float>>(&Path::addTriangle))
+        .def ("addRectangle", static_cast<void (Path::*)(float, float, float, float)> (&Path::addRectangle))
+        .def ("addRectangle", static_cast<void (Path::*)(Rectangle<int>)> (&Path::template addRectangle<int>))
+        .def ("addRectangle", static_cast<void (Path::*)(Rectangle<float>)> (&Path::template addRectangle<float>))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(float, float, float, float, float)> (&Path::addRoundedRectangle))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(float, float, float, float, float, float)> (&Path::addRoundedRectangle))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(float, float, float, float, float, float, bool, bool, bool, bool)> (&Path::addRoundedRectangle))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(Rectangle<int>, float)> (&Path::template addRoundedRectangle<int>))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(Rectangle<float>, float)> (&Path::template addRoundedRectangle<float>))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(Rectangle<int>, float, float)> (&Path::template addRoundedRectangle<int>))
+        .def ("addRoundedRectangle", static_cast<void (Path::*)(Rectangle<float>, float, float)> (&Path::template addRoundedRectangle<float>))
+        .def ("addTriangle", py::overload_cast<float, float, float, float, float, float> (&Path::addTriangle))
+        .def ("addTriangle", py::overload_cast<Point<float>, Point<float>, Point<float>> (&Path::addTriangle))
         .def ("addQuadrilateral", &Path::addQuadrilateral)
-        .def ("addEllipse", py::overload_cast<float, float, float, float>(&Path::addEllipse))
-        .def ("addEllipse", py::overload_cast<Rectangle<float>>(&Path::addEllipse))
+        .def ("addEllipse", py::overload_cast<float, float, float, float> (&Path::addEllipse))
+        .def ("addEllipse", py::overload_cast<Rectangle<float>> (&Path::addEllipse))
         .def ("addArc", &Path::addArc)
         .def ("addCentredArc", &Path::addCentredArc)
-        .def ("addPieSegment", py::overload_cast<float, float, float, float, float, float, float>(&Path::addPieSegment))
-        .def ("addPieSegment", py::overload_cast<Rectangle<float>, float, float, float>(&Path::addPieSegment))
+        .def ("addPieSegment", py::overload_cast<float, float, float, float, float, float, float> (&Path::addPieSegment))
+        .def ("addPieSegment", py::overload_cast<Rectangle<float>, float, float, float> (&Path::addPieSegment))
         .def ("addLineSegment", &Path::addLineSegment)
         .def ("addArrow", &Path::addArrow)
         .def ("addPolygon", &Path::addPolygon)
         .def ("addStar", &Path::addStar)
         .def ("addBubble", &Path::addBubble)
-        .def ("addPath", py::overload_cast<const Path&>(&Path::addPath))
-        .def ("addPath", py::overload_cast<const Path&, const AffineTransform&>(&Path::addPath))
+        .def ("addPath", py::overload_cast<const Path&> (&Path::addPath))
+        .def ("addPath", py::overload_cast<const Path&, const AffineTransform&> (&Path::addPath))
         .def ("swapWithPath", &Path::swapWithPath)
         .def ("preallocateSpace", &Path::preallocateSpace)
         .def ("applyTransform", &Path::applyTransform)
         .def ("scaleToFit", &Path::scaleToFit)
-    //.def ("getTransformToScaleToFit", py::overload_cast<float, float, float, float, bool, Justification>(&Path::getTransformToScaleToFit))
-    //.def ("getTransformToScaleToFit", py::overload_cast<Rectangle<float>, bool, Justification>(&Path::getTransformToScaleToFit))
+    //.def ("getTransformToScaleToFit", py::overload_cast<float, float, float, float, bool, Justification> (&Path::getTransformToScaleToFit))
+    //.def ("getTransformToScaleToFit", py::overload_cast<Rectangle<float>, bool, Justification> (&Path::getTransformToScaleToFit))
         .def ("createPathWithRoundedCorners", &Path::createPathWithRoundedCorners)
         .def ("setUsingNonZeroWinding", &Path::setUsingNonZeroWinding)
         .def ("isUsingNonZeroWinding", &Path::isUsingNonZeroWinding)
@@ -516,15 +589,15 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
     py::class_<PathStrokeType> classPathStrokeType (m, "PathStrokeType");
 
     py::enum_<PathStrokeType::JointStyle> (classPathStrokeType, "JointStyle")
-        .value("mitered", PathStrokeType::mitered)
-        .value("curved", PathStrokeType::curved)
-        .value("beveled", PathStrokeType::beveled)
+        .value ("mitered", PathStrokeType::mitered)
+        .value ("curved", PathStrokeType::curved)
+        .value ("beveled", PathStrokeType::beveled)
         .export_values();
 
     py::enum_<PathStrokeType::EndCapStyle> (classPathStrokeType, "EndCapStyle")
-        .value("butt", PathStrokeType::butt)
-        .value("square", PathStrokeType::square)
-        .value("rounded", PathStrokeType::rounded)
+        .value ("butt", PathStrokeType::butt)
+        .value ("square", PathStrokeType::square)
+        .value ("rounded", PathStrokeType::rounded)
         .export_values();
 
     classPathStrokeType
@@ -551,7 +624,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     py::class_<PixelARGB> (m, "PixelARGB")
         .def (py::init<>())
-    //.def (py::init<uint8, uint8, uint8, uint8>())
+        .def (py::init<uint8, uint8, uint8, uint8>())
         .def ("getNativeARGB", &PixelARGB::getNativeARGB)
         .def ("getInARGBMaskOrder", &PixelARGB::getInARGBMaskOrder)
         .def ("getInARGBMemoryOrder", &PixelARGB::getInARGBMemoryOrder)
@@ -561,17 +634,30 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getRed", &PixelARGB::getRed)
         .def ("getGreen", &PixelARGB::getGreen)
         .def ("getBlue", &PixelARGB::getBlue)
-    //.def ("set", &PixelARGB::set<?>)
+        .def ("set", &PixelARGB::template set<PixelRGB>)
+        .def ("set", &PixelARGB::template set<PixelARGB>)
+        .def ("set", &PixelARGB::template set<PixelAlpha>)
         .def ("setARGB", &PixelARGB::setARGB)
-    //.def ("blend", &PixelARGB::blend<?>)
-    //.def ("blend", py::overload_cast<PixelRGB>(&PixelARGB::blend))
-    //.def ("tween", &PixelARGB::tween<?>)
+        .def ("blend", static_cast<void (PixelARGB::*)(PixelRGB)> (&PixelARGB::blend))
+        .def ("blend", py::overload_cast<const PixelARGB&> (&PixelARGB::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&> (&PixelARGB::template blend<PixelAlpha>))
+        .def ("blend", py::overload_cast<const PixelRGB&, uint32> (&PixelARGB::template blend<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&, uint32> (&PixelARGB::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&, uint32> (&PixelARGB::template blend<PixelAlpha>))
+        .def ("tween", py::overload_cast<const PixelRGB&, uint32> (&PixelARGB::template tween<PixelRGB>))
+        .def ("tween", py::overload_cast<const PixelARGB&, uint32> (&PixelARGB::template tween<PixelARGB>))
+        .def ("tween", py::overload_cast<const PixelAlpha&, uint32> (&PixelARGB::template tween<PixelAlpha>))
         .def ("setAlpha", &PixelARGB::setAlpha)
-    //.def ("multiplyAlpha", py::overload_cast<float>(&PixelARGB::multiplyAlpha, py::const_))
+        .def ("multiplyAlpha", py::overload_cast<int> (&PixelARGB::multiplyAlpha))
+        .def ("multiplyAlpha", py::overload_cast<float> (&PixelARGB::multiplyAlpha))
         .def ("getUnpremultiplied", &PixelARGB::getUnpremultiplied)
         .def ("premultiply", &PixelARGB::premultiply)
         .def ("unpremultiply", &PixelARGB::unpremultiply)
         .def ("desaturate", &PixelARGB::desaturate)
+        .def_property_readonly_static ("indexA", [] { return PixelARGB::indexA; })
+        .def_property_readonly_static ("indexR", [] { return PixelARGB::indexR; })
+        .def_property_readonly_static ("indexG", [] { return PixelARGB::indexG; })
+        .def_property_readonly_static ("indexB", [] { return PixelARGB::indexB; })
     ;
 
     py::class_<PixelRGB> (m, "PixelRGB")
@@ -585,16 +671,31 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getRed", &PixelRGB::getRed)
         .def ("getGreen", &PixelRGB::getGreen)
         .def ("getBlue", &PixelRGB::getBlue)
-    //.def ("set", &PixelRGB::set<?>)
+        .def ("set", &PixelRGB::template set<PixelRGB>)
+        .def ("set", &PixelRGB::template set<PixelARGB>)
+        .def ("set", &PixelRGB::template set<PixelAlpha>)
         .def ("setARGB", &PixelRGB::setARGB)
-    //.def ("blend", &PixelRGB::blend<?>)
-    //.def ("blend", py::overload_cast<PixelRGB>(&PixelRGB::blend))
-    //.def ("tween", &PixelRGB::tween<?>)
+        .def ("blend", static_cast<void (PixelRGB::*)(PixelRGB)> (&PixelRGB::blend))
+        .def ("blend", py::overload_cast<const PixelARGB&> (&PixelRGB::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&> (&PixelRGB::template blend<PixelAlpha>))
+        .def ("blend", py::overload_cast<const PixelRGB&, uint32> (&PixelRGB::template blend<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&, uint32> (&PixelRGB::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&, uint32> (&PixelRGB::template blend<PixelAlpha>))
+        .def ("blend", py::overload_cast<const PixelRGB&, uint32> (&PixelRGB::template tween<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&, uint32> (&PixelRGB::template tween<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&, uint32> (&PixelRGB::template tween<PixelAlpha>))
+        .def ("tween", py::overload_cast<const PixelRGB&, uint32> (&PixelRGB::template tween<PixelRGB>))
+        .def ("tween", py::overload_cast<const PixelARGB&, uint32> (&PixelRGB::template tween<PixelARGB>))
+        .def ("tween", py::overload_cast<const PixelAlpha&, uint32> (&PixelRGB::template tween<PixelAlpha>))
         .def ("setAlpha", &PixelRGB::setAlpha)
-    //.def ("multiplyAlpha", py::overload_cast<float>(&PixelRGB::multiplyAlpha, py::const_))
+        .def ("multiplyAlpha", py::overload_cast<int> (&PixelRGB::multiplyAlpha))
+        .def ("multiplyAlpha", py::overload_cast<float> (&PixelRGB::multiplyAlpha))
         .def ("premultiply", &PixelRGB::premultiply)
         .def ("unpremultiply", &PixelRGB::unpremultiply)
         .def ("desaturate", &PixelRGB::desaturate)
+        .def_property_readonly_static ("indexR", [] { return PixelARGB::indexR; })
+        .def_property_readonly_static ("indexG", [] { return PixelARGB::indexG; })
+        .def_property_readonly_static ("indexB", [] { return PixelARGB::indexB; })
     ;
 
     py::class_<PixelAlpha> (m, "PixelAlpha")
@@ -608,31 +709,44 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getRed", &PixelAlpha::getRed)
         .def ("getGreen", &PixelAlpha::getGreen)
         .def ("getBlue", &PixelAlpha::getBlue)
-    //.def ("set", &PixelAlpha::set<?>)
+        .def ("set", &PixelAlpha::template set<PixelRGB>)
+        .def ("set", &PixelAlpha::template set<PixelARGB>)
+        .def ("set", &PixelAlpha::template set<PixelAlpha>)
         .def ("setARGB", &PixelAlpha::setARGB)
-    //.def ("blend", &PixelAlpha::blend<?>)
-    //.def ("blend", &PixelAlpha::blend<PixelRGB>)
-    //.def ("tween", &PixelAlpha::tween<?>)
+        .def ("blend", py::overload_cast<const PixelRGB&> (&PixelAlpha::template blend<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&> (&PixelAlpha::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&> (&PixelAlpha::template blend<PixelAlpha>))
+        .def ("blend", py::overload_cast<const PixelRGB&, uint32> (&PixelAlpha::template blend<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&, uint32> (&PixelAlpha::template blend<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&, uint32> (&PixelAlpha::template blend<PixelAlpha>))
+        .def ("blend", py::overload_cast<const PixelRGB&, uint32> (&PixelAlpha::template tween<PixelRGB>))
+        .def ("blend", py::overload_cast<const PixelARGB&, uint32> (&PixelAlpha::template tween<PixelARGB>))
+        .def ("blend", py::overload_cast<const PixelAlpha&, uint32> (&PixelAlpha::template tween<PixelAlpha>))
+        .def ("tween", py::overload_cast<const PixelRGB&, uint32> (&PixelAlpha::template tween<PixelRGB>))
+        .def ("tween", py::overload_cast<const PixelARGB&, uint32> (&PixelAlpha::template tween<PixelARGB>))
+        .def ("tween", py::overload_cast<const PixelAlpha&, uint32> (&PixelAlpha::template tween<PixelAlpha>))
         .def ("setAlpha", &PixelAlpha::setAlpha)
-    //.def ("multiplyAlpha", py::overload_cast<float>(&PixelAlpha::multiplyAlpha, py::const_))
+        .def ("multiplyAlpha", py::overload_cast<int> (&PixelAlpha::multiplyAlpha))
+        .def ("multiplyAlpha", py::overload_cast<float> (&PixelAlpha::multiplyAlpha))
         .def ("premultiply", &PixelAlpha::premultiply)
         .def ("unpremultiply", &PixelAlpha::unpremultiply)
         .def ("desaturate", &PixelAlpha::desaturate)
+        .def_property_readonly_static ("indexA", [] { return PixelARGB::indexA; })
     ;
 
     // ============================================================================================ juce::Colour
 
     py::class_<Colour> (m, "Colour")
         .def (py::init<>())
-    //.def (py::init<uint32>())
-    //.def (py::init<uint8, uint8, uint8>())
-    //.def (py::init<uint8, uint8, uint8, uint8>())
-        .def (py::init<uint8, uint8, uint8, float>())
+        .def (py::init<uint32>())
+        .def (py::init<uint8, uint8, uint8>())
+        .def (py::init<uint8, uint8, uint8, uint8>())
+    //.def (py::init<uint8, uint8, uint8, float>())
     //.def (py::init<float, float, float, uint8>())
     //.def (py::init<float, float, float, float>())
-    //.def (py::init<PixelARGB>())
-    //.def (py::init<PixelRGB>())
-    //.def (py::init<PixelAlpha>())
+        .def (py::init<PixelARGB>())
+        .def (py::init<PixelRGB>())
+        .def (py::init<PixelAlpha>())
         .def_static ("fromRGB", &Colour::fromRGB)
         .def_static ("fromRGBA", &Colour::fromRGBA)
         .def_static ("fromFloatRGBA", &Colour::fromFloatRGBA)
@@ -651,7 +765,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getFloatAlpha", &Colour::getFloatAlpha)
         .def ("isOpaque", &Colour::isOpaque)
         .def ("isTransparent", &Colour::isTransparent)
-        .def ("withAlpha", py::overload_cast<float>(&Colour::withAlpha, py::const_))
+        .def ("withAlpha", py::overload_cast<float> (&Colour::withAlpha, py::const_))
         .def ("withMultipliedAlpha", &Colour::withMultipliedAlpha)
         .def ("overlaidWith", &Colour::overlaidWith)
         .def ("interpolatedWith", &Colour::interpolatedWith)
@@ -673,8 +787,8 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("withMultipliedLightness", &Colour::withMultipliedLightness)
         .def ("brighter", &Colour::brighter)
         .def ("darker", &Colour::darker)
-        .def ("contrasting", py::overload_cast<float>(&Colour::contrasting, py::const_))
-        .def ("contrasting", py::overload_cast<Colour, float>(&Colour::contrasting, py::const_))
+        .def ("contrasting", py::overload_cast<float> (&Colour::contrasting, py::const_))
+        .def ("contrasting", py::overload_cast<Colour, float> (&Colour::contrasting, py::const_))
     //.def_static ("contrasting", static_cast<Colour (*)(Colour, Colour)>(&Colour::contrasting)) // Not supported by pybind11
         .def_static ("greyLevel", &Colour::greyLevel)
         .def ("toString", &Colour::toString)
@@ -717,19 +831,19 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::Image
 
-    py::class_<Image> imageClass (m, "Image");
+    py::class_<Image> classImage (m, "Image");
 
-    py::enum_<Image::PixelFormat> (imageClass, "PixelFormat")
-        .value("UnknownFormat", Image::PixelFormat::UnknownFormat)
-        .value("RGB", Image::PixelFormat::RGB)
-        .value("ARGB", Image::PixelFormat::ARGB)
-        .value("SingleChannel", Image::PixelFormat::SingleChannel)
+    py::enum_<Image::PixelFormat> (classImage, "PixelFormat")
+        .value ("UnknownFormat", Image::PixelFormat::UnknownFormat)
+        .value ("RGB", Image::PixelFormat::RGB)
+        .value ("ARGB", Image::PixelFormat::ARGB)
+        .value ("SingleChannel", Image::PixelFormat::SingleChannel)
         .export_values();
 
-    imageClass
+    classImage
         .def (py::init<>())
-    //.def (py::init<Image::PixelFormat, int, int, bool>())
-    //.def (py::init<const Image&>())
+        .def (py::init<Image::PixelFormat, int, int, bool>())
+        .def (py::init<Image::PixelFormat, int, int, bool, const ImageType&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isValid", &Image::isValid)
@@ -743,7 +857,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("isSingleChannel", &Image::isSingleChannel)
         .def ("hasAlphaChannel", &Image::hasAlphaChannel)
         .def ("clear", &Image::clear)
-    //.def ("rescaled", &Image::rescaled)
+        .def ("rescaled", &Image::rescaled)
         .def ("createCopy", &Image::createCopy)
         .def ("convertedToFormat", &Image::convertedToFormat)
         .def ("duplicateIfShared", &Image::duplicateIfShared)
@@ -754,23 +868,50 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("multiplyAllAlphas", &Image::multiplyAllAlphas)
         .def ("desaturate", &Image::desaturate)
         .def ("moveImageSection", &Image::moveImageSection)
-    //.def ("createSolidAreaMask", &Image::createSolidAreaMask)
-    //.def ("getProperties", &Image::getProperties)
+        .def ("createSolidAreaMask", &Image::createSolidAreaMask)
+        .def ("getProperties", &Image::getProperties)
     //.def ("createLowLevelContext", &Image::createLowLevelContext)
         .def ("getReferenceCount", &Image::getReferenceCount)
     //.def ("getPixelData", &Image::getPixelData)
+    ;
+
+    // ============================================================================================ juce::ImagePixelData
+
+    py::class_<ImagePixelData> classImagePixelData (m, "ImagePixelData");
+
+    classImagePixelData
+    //.def (py::init<Image::PixelFormat, int, int>())
+    //.def ("createLowLevelContext", &ImagePixelData::createLowLevelContext)
+    //.def ("clone", &ImagePixelData::clone)
+    //.def ("createType", &ImagePixelData::createType)
+    //.def ("initialiseBitmapData", &ImagePixelData::initialiseBitmapData)
+        .def ("getSharedCount", &ImagePixelData::getSharedCount)
+        .def_readonly ("pixelFormat", &ImagePixelData::pixelFormat)
+        .def_readonly ("width", &ImagePixelData::width)
+        .def_readonly ("height", &ImagePixelData::height)
+        .def_readwrite ("userData", &ImagePixelData::userData)
+    //.def_readwrite ("listeners", &ImagePixelData::listeners)
+        .def ("sendDataChangeMessage", &ImagePixelData::sendDataChangeMessage)
+    ;
+
+    // ============================================================================================ juce::ImagePixelData
+
+    py::class_<ImageType> classImageType (m, "ImageType");
+
+    classImageType
+    //.def (py::init<>())
+        .def ("create", &ImageType::create)
+        .def ("getTypeID", &ImageType::getTypeID)
+        .def ("convert", &ImageType::convert)
     ;
 
     // ============================================================================================ juce::FillType
 
     py::class_<FillType> (m, "FillType")
         .def (py::init<>())
-    //.def (py::init<Colour>())
-    //.def (py::init<const ColourGradient&>())
-    //.def (py::init<ColourGradient&&>())
-    //.def (py::init<const Image&, const AffineTransform&>())
-    //.def (py::init<const FillType&>())
-    //.def (py::init<FillType&&>())
+        .def (py::init<Colour>())
+        .def (py::init<const ColourGradient&>())
+        .def (py::init<const Image&, const AffineTransform&>())
         .def (py::self == py::self)
         .def (py::self != py::self)
         .def ("isColour", &FillType::isColour)
@@ -783,18 +924,12 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("getOpacity", &FillType::getOpacity)
         .def ("isInvisible", &FillType::isInvisible)
         .def ("transformed", &FillType::transformed)
-        .def_property("colour",
-                      [](const FillType& self) { return self.colour; },
-                      [](FillType& self, const Colour& v) { self.colour = v; })
+        .def_readwrite("colour", &FillType::colour)
         .def_property("gradient",
                       [](const FillType& self) { return self.gradient.get(); },
                       [](FillType& self, ColourGradient* v) { self.gradient = v ? std::make_unique<ColourGradient>(*v) : nullptr; })
-        .def_property("image",
-                      [](const FillType& self) { return self.image; },
-                      [](FillType& self, const Image& v) { self.image = v; })
-        .def_property("transform",
-                      [](const FillType& self) { return self.transform; },
-                      [](FillType& self, const AffineTransform& v) { self.transform = v; })
+        .def_readwrite("image", &FillType::image)
+        .def_readwrite("transform", &FillType::transform)
     ;
 
     // ============================================================================================ juce::Graphics
@@ -830,8 +965,8 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
         .def ("fillRect", py::overload_cast<Rectangle<float>> (&Graphics::fillRect, py::const_))
         .def ("fillRect", py::overload_cast<int, int, int, int> (&Graphics::fillRect, py::const_))
         .def ("fillRect", py::overload_cast<float, float, float, float> (&Graphics::fillRect, py::const_))
-    //.def ("fillRectList", py::overload_cast<const RectangleList<float>&> (&Graphics::fillRectList, py::const_))
-    //.def ("fillRectList", py::overload_cast<const RectangleList<int>&> (&Graphics::fillRectList, py::const_))
+        .def ("fillRectList", py::overload_cast<const RectangleList<float>&> (&Graphics::fillRectList, py::const_))
+        .def ("fillRectList", py::overload_cast<const RectangleList<int>&> (&Graphics::fillRectList, py::const_))
         .def ("fillRoundedRectangle", py::overload_cast<float, float, float, float, float> (&Graphics::fillRoundedRectangle, py::const_))
         .def ("fillRoundedRectangle", py::overload_cast<Rectangle<float>, float> (&Graphics::fillRoundedRectangle, py::const_))
         .def ("fillCheckerBoard", &Graphics::fillCheckerBoard)
@@ -888,7 +1023,7 @@ void registerJuceGraphicsBindings (pybind11::module_& m)
             : g(g)
         {
         }
-    
+
         Graphics& g;
         std::unique_ptr<Graphics::ScopedSaveState> state;
     };

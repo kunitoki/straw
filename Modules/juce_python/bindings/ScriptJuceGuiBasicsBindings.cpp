@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #if __has_include(<juce_gui_basics/juce_gui_basics.h>)
@@ -71,7 +71,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     {
         if (! applicationType)
             throw py::value_error("Argument must be a JUCEApplication subclass");
-    
+
         JUCEApplicationBase::createInstance = +[]() -> JUCEApplicationBase* { return nullptr; };
 
         initialiseJuce_GUI();
@@ -89,7 +89,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         auto systemExit = [sys, &application]
         {
             const int returnValue = application != nullptr ? application->shutdownApp() : 255;
-        
+
             sys.attr ("exit") (returnValue);
         };
 
@@ -135,7 +135,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
                         MessageManager::getInstance()->runDispatchLoopUntil(200);
                     }
-                    
+
                     isErrorSignalInFlight = PyErr_CheckSignals() != 0;
                     if (isErrorSignalInFlight)
                         break;
@@ -143,7 +143,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                 while (true);
             }
             JUCE_CATCH_EXCEPTION
-            
+
             if (isErrorSignalInFlight)
                 throw py::error_already_set();
         }
@@ -230,7 +230,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
                     auto pyex = py::none();
 
                     override_ (pyex, sourceFilename, lineNumber);
-                    
+
                     return;
                 }
             }
@@ -319,7 +319,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     ;
 
     // ============================================================================================ juce::MouseInputSource
-    
+
     py::class_<MouseInputSource> classMouseInputSource (m, "MouseInputSource");
 
     py::enum_<MouseInputSource::InputSourceType> (classMouseInputSource, "InputSourceType")
@@ -374,7 +374,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
 
     // ============================================================================================ juce::MouseEvent
 
-    py::class_<MouseEvent> classMouseEvent (m, "MouseEvent");    
+    py::class_<MouseEvent> classMouseEvent (m, "MouseEvent");
     classMouseEvent
         .def (py::init<MouseInputSource, Point<float>, ModifierKeys, float, float, float, float, float, Component*, Component*, Time, Point<float>, Time, int, bool>())
         .def_readonly ("position", &MouseEvent::position)
@@ -421,7 +421,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def_static ("getDoubleClickTimeout", &MouseEvent::getDoubleClickTimeout)
     ;
 
-    py::class_<MouseWheelDetails> classMouseWheelDetails (m, "MouseWheelDetails");    
+    py::class_<MouseWheelDetails> classMouseWheelDetails (m, "MouseWheelDetails");
     classMouseWheelDetails
         .def (py::init<>())
         .def_readwrite ("deltaX", &MouseWheelDetails::deltaX)
@@ -431,7 +431,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def_readwrite ("isInertial", &MouseWheelDetails::isInertial)
     ;
 
-    py::class_<PenDetails> classPenDetails (m, "PenDetails");    
+    py::class_<PenDetails> classPenDetails (m, "PenDetails");
     classPenDetails
         .def (py::init<>())
         .def_readwrite ("rotation", &PenDetails::rotation)
@@ -440,11 +440,11 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     ;
 
     // ============================================================================================ juce::MouseListener
-    
+
     class PyMouseListener : public MouseListener
     {
         using MouseListener::MouseListener;
-    
+
         void mouseMove (const MouseEvent& event) override
         {
             PYBIND11_OVERRIDE (void, MouseListener, mouseMove, event);
@@ -490,7 +490,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
             PYBIND11_OVERRIDE (void, MouseListener, mouseMagnify, event, scaleFactor);
         }
     };
-    
+
     py::class_<MouseListener, PyMouseListener> classMouseListener (m, "MouseListener");
 
     classMouseListener
@@ -507,7 +507,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     ;
 
     // ============================================================================================ juce::MouseCursor
-    
+
     py::class_<MouseCursor> classMouseCursor (m, "MouseCursor");
 
     py::enum_<MouseCursor::StandardCursorType> (classMouseCursor, "StandardCursorType")
@@ -610,7 +610,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         .def ("removeDarkModeSettingListener", &Desktop::removeDarkModeSettingListener)
         .def ("isDarkModeActive", &Desktop::isDarkModeActive)
         .def ("setKioskModeComponent", &Desktop::setKioskModeComponent)
-        .def ("getKioskModeComponent", &Desktop::getKioskModeComponent)        
+        .def ("getKioskModeComponent", &Desktop::getKioskModeComponent)
         .def ("getNumComponents", &Desktop::getNumComponents)
         .def ("getComponent", &Desktop::getComponent, py::return_value_policy::reference)
         .def ("findComponentAt", &Desktop::findComponentAt, py::return_value_policy::reference)
@@ -655,12 +655,12 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     class PyComponent : public Component
     {
         using Component::Component;
-    
+
         void setName (const String& newName) override
         {
             PYBIND11_OVERRIDE (void, Component, setName, newName);
         }
-        
+
         void setVisible (bool shouldBeVisible) override
         {
             PYBIND11_OVERRIDE (void, Component, setVisible, shouldBeVisible);
@@ -685,7 +685,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (float, Component, getDesktopScaleFactor);
         }
-        
+
         void parentHierarchyChanged() override
         {
             PYBIND11_OVERRIDE (void, Component, parentHierarchyChanged);
@@ -695,17 +695,17 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (void, Component, childrenChanged);
         }
-        
+
         bool hitTest (int x, int y) override
         {
             PYBIND11_OVERRIDE (bool, Component, hitTest, x, y);
         }
-        
+
         void lookAndFeelChanged() override
         {
             PYBIND11_OVERRIDE (void, Component, lookAndFeelChanged);
         }
-        
+
         void enablementChanged() override
         {
             PYBIND11_OVERRIDE (void, Component, enablementChanged);
@@ -715,7 +715,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (void, Component, alphaChanged);
         }
-        
+
         void paint (Graphics& g) override
         {
             {
@@ -790,17 +790,17 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (void, Component, mouseMagnify, event, scaleFactor);
         }
-        
+
         bool keyPressed (const KeyPress& key) override
         {
             PYBIND11_OVERRIDE (bool, Component, keyPressed, key);
         }
-        
+
         bool keyStateChanged (bool isKeyDown) override
         {
             PYBIND11_OVERRIDE (bool, Component, keyStateChanged, isKeyDown);
         }
-        
+
         void modifierKeysChanged (const ModifierKeys& modifiers) override
         {
             PYBIND11_OVERRIDE (void, Component, modifierKeysChanged, modifiers);
@@ -855,7 +855,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
         {
             PYBIND11_OVERRIDE (void, Component, handleCommandMessage, commandId);
         }
-        
+
         bool canModalEventBeSentToComponent (const Component* targetComponent) override
         {
             PYBIND11_OVERRIDE (bool, Component, canModalEventBeSentToComponent, targetComponent);
@@ -1253,7 +1253,7 @@ void registerJuceGuiBasicsBindings (pybind11::module_& m)
     class PyDocumentWindow : public DocumentWindow
     {
         using DocumentWindow::DocumentWindow;
-    
+
         void closeButtonPressed() override
         {
             PYBIND11_OVERRIDE(void, DocumentWindow, closeButtonPressed);

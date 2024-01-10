@@ -1,5 +1,5 @@
 /**
- * juce python - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "ClassDemangling.h"
