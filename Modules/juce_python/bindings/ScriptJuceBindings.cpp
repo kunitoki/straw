@@ -2,7 +2,7 @@
  * juce python - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
-#include "../juce_python.h"
+#include "../utilities/PyBind11Includes.h"
 
 #include "ScriptJuceCoreBindings.h"
 #include "ScriptJuceEventsBindings.h"

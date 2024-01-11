@@ -8,7 +8,7 @@
 
 #include <juce_graphics/juce_graphics.h>
 
-#include "../pybind11/embed.h"
+#include "../utilities/PyBind11Includes.h"
 
 //=================================================================================================
 

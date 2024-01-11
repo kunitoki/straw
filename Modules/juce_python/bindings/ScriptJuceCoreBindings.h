@@ -6,7 +6,7 @@
 
 #include <juce_core/juce_core.h>
 
-#include "../pybind11/embed.h"
+#include "../utilities/PyBind11Includes.h"
 
 #include <functional>
 #include <typeinfo>

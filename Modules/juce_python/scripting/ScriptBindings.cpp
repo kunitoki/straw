@@ -8,8 +8,6 @@
 #include "ScriptException.h"
 #include "ScriptUtilities.h"
 
-//#include "../values/straw_VariantConverter.h"
-
 #include <functional>
 #include <string_view>
 #include <tuple>

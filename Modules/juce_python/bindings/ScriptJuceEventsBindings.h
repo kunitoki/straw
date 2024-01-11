@@ -8,7 +8,7 @@
 
 #include <juce_events/juce_events.h>
 
-#include "../pybind11/embed.h"
+#include "../utilities/PyBind11Includes.h"
 
 //=================================================================================================
 

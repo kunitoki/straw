@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../pybind11/embed.h"
+#include "PyBind11Includes.h"
 
 namespace jucepy::Helpers {
 

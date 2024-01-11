@@ -6,9 +6,9 @@
 
 #include "ScriptJuceGuiBasicsBindings.h"
 
-//#include "../../values/straw_VariantConverter.h"
-
-#include "../pybind11/operators.h"
+#define JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
+#include "../utilities/PyBind11Includes.h"
+#undef JUCE_PYTHON_INCLUDE_PYBIND11_OPERATORS
 
 #include <functional>
 #include <string_view>

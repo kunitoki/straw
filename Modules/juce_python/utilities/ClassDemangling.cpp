@@ -4,8 +4,6 @@
 
 #include "ClassDemangling.h"
 
-//#include "../values/straw_VariantConverter.h"
-
 #if __clang__ || GNUC
 #include <cxxabi.h>
 #else
