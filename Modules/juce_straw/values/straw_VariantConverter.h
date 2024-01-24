@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -18,7 +18,7 @@ struct VariantConverter
     {
         return static_cast<T>(v);
     }
-    
+
     static juce::var toVar(const T& v)
     {
         return juce::var(v);
@@ -111,7 +111,7 @@ struct VariantConverter<juce::NamedValueSet>
 
         if (auto object = v.getDynamicObject())
             result = object->getProperties();
-        
+
         return result;
     }
 

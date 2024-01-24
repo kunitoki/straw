@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "JuceHeader.h"
@@ -42,6 +42,7 @@ private:
                                     juce::DocumentWindow::allButtons),
               app (a)
         {
+            setComponentID ("straw::DemoMainWindow");
             setUsingNativeTitleBar (true);
             setContentOwned (c, true);
 
@@ -55,6 +56,8 @@ private:
 
             juce::MessageManager::callAsync([this]
             {
+                juce::Process::makeForegroundProcess();
+
                 setVisible (true);
                 toFront (true);
             });

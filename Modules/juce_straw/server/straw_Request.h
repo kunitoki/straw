@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once

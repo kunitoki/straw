@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include <juce_python/juce_python.h>
@@ -20,16 +20,16 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     using namespace juce;
     using namespace straw;
 
-    py::module_::import ("juce");
+    py::module_::import (popsicle::PythonModuleName);
 
-    py::register_exception<ScriptException> (m, "ScriptException");
+    py::register_exception<popsicle::ScriptException> (m, "ScriptException");
 
     m.def ("findComponentById", [](py::args args) -> Component*
     {
         if (args.size() != 1)
-            throw ScriptException ("Missing argument componentId when calling findComponentById");
+            throw popsicle::ScriptException ("Missing argument componentId when calling findComponentById");
 
-        //auto engine = reinterpret_cast<ScriptEngine*> (py::get_shared_data ("_ENGINE"));
+        //auto engine = reinterpret_cast<popsicle::ScriptEngine*> (py::get_shared_data ("_ENGINE"));
         //if (engine == nullptr)
         //    throw ScriptException ("Missing _ENGINE shared data when calling findComponent");
 
@@ -42,7 +42,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("findComponentsByType", [](py::args args)
     {
         if (args.size() != 1)
-            throw ScriptException ("Missing argument typeName when calling findComponentByType");
+            throw popsicle::ScriptException ("Missing argument typeName when calling findComponentByType");
 
         auto components = Helpers::findComponentsByType (String (py::str (args [0])));
 
@@ -55,9 +55,9 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("clickComponent", [](py::args args)
     {
         if (args.size() != 1)
-            throw ScriptException ("Missing argument componentId when calling clickComponent");
+            throw popsicle::ScriptException ("Missing argument componentId when calling clickComponent");
 
-        juce::Component* component = python_cast<Component*> (args [0]).value_or (nullptr);
+        juce::Component* component = popsicle::python_cast<Component*> (args [0]).value_or (nullptr);
         if (component == nullptr)
             component = Helpers::findComponentById (String (py::str (args [0])));
 
@@ -71,13 +71,13 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("renderComponent", [](py::args args)
     {
         if (args.size() == 0)
-            throw ScriptException ("Missing argument componentId when calling renderComponent");
+            throw popsicle::ScriptException ("Missing argument componentId when calling renderComponent");
 
         bool withChildren = false;
         if (args.size() > 1)
             withChildren = args [1].cast<bool>();
 
-        auto component = python_cast<Component*> (args [0]).value_or (nullptr);
+        auto component = popsicle::python_cast<Component*> (args [0]).value_or (nullptr);
         if (component == nullptr)
             component = Helpers::findComponentById (String (py::str (args [0])));
 
@@ -90,9 +90,9 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("invokeComponentCustomMethod", [](py::args args) -> juce::var
     {
         if (args.size() < 2)
-            throw ScriptException ("Missing arguments componentID and/or methodName when calling invokeComponentCustomMethod");
+            throw popsicle::ScriptException ("Missing arguments componentID and/or methodName when calling invokeComponentCustomMethod");
 
-        auto component = python_cast<Component*> (args [0]).value_or (nullptr);
+        auto component = popsicle::python_cast<Component*> (args [0]).value_or (nullptr);
         if (component == nullptr)
             component = Helpers::findComponentById (String (py::str (args [0])));
 
@@ -106,7 +106,7 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
 
             return Helpers::invokeComponentCustomMethod (component, methodName, arguments, [](StringRef exception)
             {
-                throw ScriptException (exception);
+                throw popsicle::ScriptException (exception);
             });
         }
 
@@ -115,16 +115,16 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
 
     m.def ("assertAlways", []([[maybe_unused]] py::args args)
     {
-        throw ScriptException ("Failing always");
+        throw popsicle::ScriptException ("Failing always");
     });
 
     m.def ("assertTrue", [](py::args args)
     {
         if (args.size() != 1)
-            throw ScriptException ("Invalid number of arguments when calling assertTrue");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertTrue");
 
         if (py::object (args[0]).is (py::bool_ (false)))
-            throw ScriptException ("Parameter does not evaluate to true");
+            throw popsicle::ScriptException ("Parameter does not evaluate to true");
 
         return true;
     });
@@ -132,10 +132,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertFalse", [](py::args args)
     {
         if (args.size() != 1)
-            throw ScriptException ("Invalid number of arguments when calling assertFalse");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertFalse");
 
         if (py::object (args[0]).is (py::bool_ (true)))
-            throw ScriptException ("Parameter does not evaluate to false");
+            throw popsicle::ScriptException ("Parameter does not evaluate to false");
 
         return true;
     });
@@ -143,10 +143,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertEqual", [](py::args args)
     {
         if (args.size() != 2)
-            throw ScriptException ("Invalid number of arguments when calling assertEqual");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertEqual");
 
         if (! (py::object (args[0]).equal (py::object (args[1]))))
-            throw ScriptException ("Parameters are not equal");
+            throw popsicle::ScriptException ("Parameters are not equal");
 
         return true;
     });
@@ -154,10 +154,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertNotEqual", [](py::args args)
     {
         if (args.size() != 2)
-            throw straw::ScriptException ("Invalid number of arguments when calling assertNotEqual");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertNotEqual");
 
         if (! (py::object (args[0]).not_equal (py::object (args[1]))))
-            throw straw::ScriptException ("Parameters are not equal");
+            throw popsicle::ScriptException ("Parameters are not equal");
 
         return true;
     });
@@ -165,10 +165,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertLessThan", [](py::args args)
     {
         if (args.size() != 2)
-            throw straw::ScriptException ("Invalid number of arguments when calling assertLessThan");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertLessThan");
 
         if (! (py::object (args[0]) < py::object (args[1])))
-            throw straw::ScriptException ("Parameter a is not less than b");
+            throw popsicle::ScriptException ("Parameter a is not less than b");
 
         return true;
     });
@@ -176,10 +176,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertLessThanEqual", [](py::args args)
     {
         if (args.size() != 2)
-            throw straw::ScriptException ("Invalid number of arguments when calling assertLessThanEqual");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertLessThanEqual");
 
         if (! (py::object (args[0]) <= py::object (args[1])))
-            throw straw::ScriptException ("Parameter a is not less than equal b");
+            throw popsicle::ScriptException ("Parameter a is not less than equal b");
 
         return true;
     });
@@ -187,10 +187,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertGreaterThan", [](py::args args)
     {
         if (args.size() != 2)
-            throw straw::ScriptException ("Invalid number of arguments when calling assertGreaterThan");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertGreaterThan");
 
         if (! (py::object (args[0]) > py::object (args[1])))
-            throw straw::ScriptException ("Parameter a is not greater than b");
+            throw popsicle::ScriptException ("Parameter a is not greater than b");
 
         return true;
     });
@@ -198,10 +198,10 @@ PYBIND11_EMBEDDED_MODULE(straw, m)
     m.def ("assertGreaterThanEqual", [](py::args args)
     {
         if (args.size() != 2)
-            throw straw::ScriptException ("Invalid number of arguments when calling assertGreaterThanEqual");
+            throw popsicle::ScriptException ("Invalid number of arguments when calling assertGreaterThanEqual");
 
         if (! (py::object (args[0]) >= py::object (args[1])))
-            throw straw::ScriptException ("Parameter a is not greater than equal b");
+            throw popsicle::ScriptException ("Parameter a is not greater than equal b");
 
         return true;
     });

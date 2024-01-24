@@ -4,6 +4,7 @@ set (TARGET_NAME straw_demo)
 project (${TARGET_NAME} VERSION 0.0.1)
 
 include (FetchContent)
+set (FETCHCONTENT_UPDATES_DISCONNECTED TRUE)
 
 # Set browsable modules in IDE
 set_property (GLOBAL PROPERTY USE_FOLDERS YES)
@@ -16,6 +17,15 @@ FetchContent_Declare (JUCE
     GIT_SHALLOW 1
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 FetchContent_MakeAvailable (JUCE)
+
+# Fetch popsicle
+FetchContent_Declare (popsicle
+    GIT_REPOSITORY https://github.com/kunitoki/popsicle.git
+    GIT_TAG origin/dev/reworked_version_1
+    GIT_SHALLOW 1
+    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/popsicle)
+FetchContent_Populate (popsicle)
+add_subdirectory ("${popsicle_SOURCE_DIR}/modules" popsicle)
 
 # Fetch melatonin inspector
 FetchContent_Declare (melatonin_inspector
@@ -86,7 +96,8 @@ target_link_libraries (${TARGET_NAME} PRIVATE
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags
     Python::Python
-    straw::juce_python
+    popsicle::juce_python
+    popsicle::juce_python_recommended_warning_flags
     straw::juce_straw
     straw::juce_straw_recommended_warning_flags
     Melatonin::Inspector

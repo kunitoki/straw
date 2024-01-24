@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "SimpleAutomation.h"
@@ -15,7 +15,7 @@ PYBIND11_EMBEDDED_MODULE(custom, m)
 {
     namespace py = pybind11;
 
-    py::module_::import ("juce");
+    py::module_::import (popsicle::PythonModuleName);
 
     py::class_<CustomSlider, juce::Slider> (m, "CustomSlider")
         .def ("customMethod", &CustomSlider::customMethod);
@@ -26,22 +26,22 @@ PYBIND11_EMBEDDED_MODULE(custom, m)
 AutomationDemo::AutomationDemo()
 {
     setOpaque (true);
-    setComponentID ("animation");
+    setComponentID ("straw::AutomationDemo");
 
     addAndMakeVisible (textButton);
-    textButton.setComponentID ("button");
+    textButton.setComponentID ("straw::AutomationDemo::TextButton");
     textButton.setButtonText ("Click me !");
     textButton.addListener (this);
     textButton.getProperties().set ("example", 1337);
 
     addAndMakeVisible (slider);
-    slider.setComponentID ("slider");
+    slider.setComponentID ("straw::AutomationDemo::Slider");
     slider.setSliderStyle (juce::Slider::LinearBar);
 
     setSize (300, 600);
 
     automationServer.registerDefaultEndpoints();
-    
+
     auto weakThis = juce::Component::SafePointer<AutomationDemo>(this);
     automationServer.registerEndpoint ("/change_background_colour", [weakThis](straw::Request request)
     {
@@ -53,7 +53,7 @@ AutomationDemo::AutomationDemo()
             {
                 self->setColour (juce::DocumentWindow::backgroundColourId, colour);
                 self->repaint();
-                
+
                 straw::sendHttpResultResponse (true, 200, *connection);
             }
             else
@@ -64,8 +64,8 @@ AutomationDemo::AutomationDemo()
     });
 
     automationServer.registerDefaultComponents();
-    automationServer.registerComponentType ("CustomSlider", &jucepy::ComponentType<CustomSlider>);
     automationServer.registerCustomPythonModules ({ "custom" });
+    automationServer.registerComponentType ("CustomSlider", &popsicle::ComponentType<CustomSlider>);
 
     auto result = automationServer.start (8001);
     if (result.failed())

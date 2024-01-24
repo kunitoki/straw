@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 /*
@@ -21,7 +21,10 @@
 
 #pragma once
 
+#include <juce_python/juce_python.h>
+
 #include "server/straw_Request.h"
 #include "server/straw_AutomationServer.h"
 #include "helpers/straw_ComponentHelpers.h"
 #include "values/straw_VariantConverter.h"
+#include "center/straw_TestCenter.h"

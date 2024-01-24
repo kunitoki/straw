@@ -1,7 +1,8 @@
 import pydoc
-import juce
-import straw
 from io import StringIO
+
+import popsicle as juce
+import straw
 
 buffer = StringIO()
 pydoc.doc (juce.Justification, output=buffer)

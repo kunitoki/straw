@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "straw_ComponentHelpers.h"
@@ -49,12 +49,12 @@ juce::Array<juce::Component*> findComponentsByType (juce::Component* component, 
 {
     juce::Array<juce::Component*> result;
 
-    if (jucepy::Helpers::demangleClassName (typeid (*component).name()) == typeName)
+    if (popsicle::Helpers::demangleClassName (typeid (*component).name()) == typeName)
         result.addIfNotAlreadyThere (component);
 
     for (int i = 0; i < component->getNumChildComponents(); ++i)
     {
-        if (auto child = component->getChildComponent (i); jucepy::Helpers::demangleClassName (typeid (*child).name()) == typeName)
+        if (auto child = component->getChildComponent (i); popsicle::Helpers::demangleClassName (typeid (*child).name()) == typeName)
             result.addIfNotAlreadyThere (child);
     }
 
@@ -94,7 +94,7 @@ juce::var makeComponentInfo (juce::Component* component, bool recursive)
     {
         object->setProperty ("id", component->getComponentID());
         object->setProperty ("name", component->getName());
-        object->setProperty ("type", jucepy::Helpers::demangleClassName (typeid (*component).name()));
+        object->setProperty ("type", popsicle::Helpers::demangleClassName (typeid (*component).name()));
         object->setProperty ("visible", component->isVisible());
         object->setProperty ("showing", component->isShowing());
         object->setProperty ("enabled", component->isEnabled());

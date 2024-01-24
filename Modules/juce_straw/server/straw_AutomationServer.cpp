@@ -1,11 +1,9 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "straw_AutomationServer.h"
 
-//#include "../scripting/straw_ScriptEngine.h"
-//#include "../scripting/straw_ScriptBindings.h"
 #include "../endpoints/straw_ComponentEndpoints.h"
 #include "../helpers/straw_ComponentHelpers.h"
 
@@ -26,9 +24,9 @@ namespace {
 int32_t currentProcessPid()
 {
 #if JUCE_MAC || JUCE_LINUX
-    return static_cast<int32_t>(::getpid());
+    return static_cast<int32_t> (::getpid());
 #else
-    return static_cast<int32_t>(GetCurrentProcessId());
+    return static_cast<int32_t> (GetCurrentProcessId());
 #endif
 }
 
@@ -171,17 +169,17 @@ Request parseHttpPayload (const juce::String& payload)
     return request;
 }
 
-juce::var makeResultVar(const juce::var& value)
+juce::var makeResultVar (const juce::var& value)
 {
     juce::DynamicObject::Ptr object = new juce::DynamicObject;
-    object->setProperty("result", value);
+    object->setProperty ("result", value);
     return object.get();
 }
 
-juce::var makeErrorVar(juce::StringRef message)
+juce::var makeErrorVar (juce::StringRef message)
 {
     juce::DynamicObject::Ptr object = new juce::DynamicObject;
-    object->setProperty("error", juce::String(message));
+    object->setProperty ("error", juce::String (message));
     return object.get();
 }
 
@@ -201,7 +199,7 @@ void sendHttpResponse (const juce::Image& image, int status, juce::StreamingSock
     juce::MemoryOutputStream mos (mb, false);
 
     juce::PNGImageFormat pngFormat;
-    if (pngFormat.writeImageToStream(image, mos))
+    if (pngFormat.writeImageToStream (image, mos))
         sendHttpResponse (mb, "image/png", status, connection);
     else
         sendHttpErrorResponse ("Unable to send image", status, connection);
@@ -236,7 +234,7 @@ AutomationServer::AutomationServer()
 
 AutomationServer::~AutomationServer()
 {
-    jucepy::Bindings::clearComponentTypes();
+    popsicle::Bindings::clearComponentTypes();
 
     stop();
 }
@@ -257,7 +255,7 @@ juce::Result AutomationServer::start (std::optional<int> port)
         if (port.has_value())
             return failedResult ("Unable to listen to port ", definedPort);
 
-        int currentPort = definedPort, upperPort = juce::jmin(65535, definedPort + 1000);
+        int currentPort = definedPort, upperPort = juce::jmin (65535, definedPort + 1000);
         while (! socket.createListener (currentPort) && currentPort < upperPort)
             ++currentPort;
 
@@ -390,7 +388,7 @@ void AutomationServer::handleApplicationJsonRequest (Request request)
     }
 
     {
-        auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
+        auto lock = juce::CriticalSection::ScopedLockType (callbacksLock);
 
         auto it = callbacks.find (request.path);
         if (it == callbacks.end())
@@ -410,18 +408,18 @@ void AutomationServer::handleApplicationJsonRequest (Request request)
 
 void AutomationServer::handlePythonScriptRequest (Request request)
 {
-    juce::MessageManager::callAsync([this, request = std::move (request)]
+    juce::MessageManager::callAsync ([this, request = std::move (request)]
     {
-        jucepy::ScriptEngine engine ([this]
+        popsicle::ScriptEngine engine ([this]
         {
             juce::StringArray modules{ "straw" };
 
             {
-                auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
+                auto lock = juce::CriticalSection::ScopedLockType (callbacksLock);
                 modules.addArray (modulesToImport);
             }
 
-            modules.removeDuplicates(false);
+            modules.removeDuplicates (false);
             return modules;
         }());
 
@@ -445,7 +443,7 @@ void AutomationServer::handlePythonScriptRequest (Request request)
 
 void AutomationServer::registerEndpoint (juce::StringRef path, EndpointCallback callback)
 {
-    auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
+    auto lock = juce::CriticalSection::ScopedLockType (callbacksLock);
 
     callbacks [path] = std::move (callback);
 }
@@ -465,32 +463,32 @@ void AutomationServer::registerDefaultEndpoints()
 
 //=================================================================================================
 
-void AutomationServer::registerComponentType (juce::StringRef className, jucepy::ComponentTypeCaster classCaster)
+void AutomationServer::registerComponentType (juce::StringRef className, popsicle::ComponentTypeCaster classCaster)
 {
-    jucepy::Bindings::registerComponentType (className, std::move (classCaster));
+    popsicle::Bindings::registerComponentType (className, std::move (classCaster));
 }
 
 void AutomationServer::registerDefaultComponents()
 {
     // Buttons
-    jucepy::Bindings::registerComponentType ("juce::Button", &jucepy::ComponentType<juce::Button>);
-    jucepy::Bindings::registerComponentType ("juce::ArrowButton", &jucepy::ComponentType<juce::ArrowButton>);
-    jucepy::Bindings::registerComponentType ("juce::DrawableButton", &jucepy::ComponentType<juce::DrawableButton>);
-    jucepy::Bindings::registerComponentType ("juce::HyperlinkButton", &jucepy::ComponentType<juce::HyperlinkButton>);
-    jucepy::Bindings::registerComponentType ("juce::ImageButton", &jucepy::ComponentType<juce::ImageButton>);
-    jucepy::Bindings::registerComponentType ("juce::ShapeButton", &jucepy::ComponentType<juce::ShapeButton>);
-    jucepy::Bindings::registerComponentType ("juce::TextButton", &jucepy::ComponentType<juce::TextButton>);
-    jucepy::Bindings::registerComponentType ("juce::ToggleButton", &jucepy::ComponentType<juce::ToggleButton>);
+    popsicle::Bindings::registerComponentType ("juce::Button", &popsicle::ComponentType<juce::Button>);
+    popsicle::Bindings::registerComponentType ("juce::ArrowButton", &popsicle::ComponentType<juce::ArrowButton>);
+    popsicle::Bindings::registerComponentType ("juce::DrawableButton", &popsicle::ComponentType<juce::DrawableButton>);
+    popsicle::Bindings::registerComponentType ("juce::HyperlinkButton", &popsicle::ComponentType<juce::HyperlinkButton>);
+    popsicle::Bindings::registerComponentType ("juce::ImageButton", &popsicle::ComponentType<juce::ImageButton>);
+    popsicle::Bindings::registerComponentType ("juce::ShapeButton", &popsicle::ComponentType<juce::ShapeButton>);
+    popsicle::Bindings::registerComponentType ("juce::TextButton", &popsicle::ComponentType<juce::TextButton>);
+    popsicle::Bindings::registerComponentType ("juce::ToggleButton", &popsicle::ComponentType<juce::ToggleButton>);
 
     // Widgets
-    jucepy::Bindings::registerComponentType ("juce::Slider", &jucepy::ComponentType<juce::Slider>);
+    popsicle::Bindings::registerComponentType ("juce::Slider", &popsicle::ComponentType<juce::Slider>);
 }
 
 //=================================================================================================
 
 void AutomationServer::registerCustomPythonModules (std::initializer_list<const char*> modules)
 {
-    auto lock = juce::CriticalSection::ScopedLockType(callbacksLock);
+    auto lock = juce::CriticalSection::ScopedLockType (callbacksLock);
 
     for (const auto& m : modules)
         modulesToImport.add (m);
@@ -500,8 +498,8 @@ void AutomationServer::registerCustomPythonModules (std::initializer_list<const 
 
 juce::File AutomationServer::getLocalRunFile() const
 {
-    juce::File applicationFile = juce::File::getSpecialLocation(juce::File::currentApplicationFile);
-    return applicationFile.getParentDirectory().getChildFile("straw.run");
+    juce::File applicationFile = juce::File::getSpecialLocation (juce::File::currentApplicationFile);
+    return applicationFile.getParentDirectory().getChildFile ("straw.run");
 }
 
 } // namespace straw

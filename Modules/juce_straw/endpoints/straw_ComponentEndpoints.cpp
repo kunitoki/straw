@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #include "straw_ComponentEndpoints.h"
@@ -19,7 +19,7 @@ void sleep (Request request)
     auto messageThread = static_cast<bool> (request.data.getProperty ("messageThread", false));
 
     auto sleeperFunction = [sleepTime] { juce::Thread::sleep(sleepTime); };
-    
+
     if (messageThread)
         juce::MessageManager::callAsync (sleeperFunction);
     else
@@ -98,7 +98,7 @@ void componentClick (Request request)
     }
 
     auto clickTime = static_cast<int> (request.data.getProperty ("time", 100));
-    
+
     juce::MessageManager::callAsync([componentID, clickTime, request = std::move (request)]
     {
         if (juce::Component* component = Helpers::findComponentById (componentID))

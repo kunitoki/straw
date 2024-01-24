@@ -1,5 +1,5 @@
 /**
- * straw 4 the juce - Copyright (c) 2023, Lucio Asnaghi. All rights reserved.
+ * straw 4 the juce - Copyright (c) 2024, Lucio Asnaghi. All rights reserved.
  */
 
 #pragma once
@@ -160,7 +160,7 @@ public:
      * @param className The name of the component class.
      * @param classCaster The casting function for the component class.
      */
-    void registerComponentType (juce::StringRef className, jucepy::ComponentTypeCaster classCaster);
+    void registerComponentType (juce::StringRef className, popsicle::ComponentTypeCaster classCaster);
 
     /**
      * @brief Registers default component types and their casters.
