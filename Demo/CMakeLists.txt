@@ -21,7 +21,7 @@ FetchContent_MakeAvailable (JUCE)
 # Fetch popsicle
 FetchContent_Declare (popsicle
     GIT_REPOSITORY https://github.com/kunitoki/popsicle.git
-    GIT_TAG origin/dev/reworked_version_1
+    GIT_TAG origin/master
     GIT_SHALLOW 1
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/popsicle)
 FetchContent_Populate (popsicle)
