@@ -1,3 +1,22 @@
+# ==============================================================================
+#
+#   This file is part of the straw project.
+#   Copyright (c) 2024 - kunitoki@gmail.com
+#
+#   straw is an open source library subject to open-source licensing.
+#
+#   The code included in this file is provided under the terms of the ISC license
+#   http://www.isc.org/downloads/software-support-policy/isc-license. Permission
+#   To use, copy, modify, and/or distribute this software for any purpose with or
+#   without fee is hereby granted provided that the above copyright notice and
+#   this permission notice appear in all copies.
+#
+#   STRAW IS PROVIDED "AS IS" WITHOUT ANY WARRANTY, AND ALL WARRANTIES, WHETHER
+#   EXPRESSED OR IMPLIED, INCLUDING MERCHANTABILITY AND FITNESS FOR PURPOSE, ARE
+#   DISCLAIMED.
+#
+# ==============================================================================
+
 cmake_minimum_required (VERSION 3.21)
 
 set (TARGET_NAME straw_demo)
@@ -13,7 +32,7 @@ option (JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 # Fetch juce
 FetchContent_Declare (JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG origin/master
+    GIT_TAG origin/7.0.12
     GIT_SHALLOW 1
     SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/JUCE)
 FetchContent_MakeAvailable (JUCE)
